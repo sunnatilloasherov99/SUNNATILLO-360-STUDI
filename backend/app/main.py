@@ -240,6 +240,7 @@ class EditorSettings(BaseModel):
     brightness: float = Field(default=1.0, ge=0.5, le=1.5)
     contrast: float = Field(default=1.0, ge=0.5, le=1.5)
     saturation: float = Field(default=1.0, ge=0.0, le=2.0)
+    seam_offset: int = Field(default=0, ge=0, le=359)
 
 
 class AIRequest(BaseModel):
