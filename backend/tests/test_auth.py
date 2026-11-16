@@ -440,3 +440,61 @@ def test_local_inpainting_uses_configured_provider_and_returns_valid_image(clien
     assert response.headers["content-type"] == "image/png"
     assert response.content == output_bytes
     assert len(requests) == 1
+
+
+def test_uploaded_original_media_is_immutable_and_private(client: TestClient) -> None:
+    owner_token = register(client, "media-owner@example.com")
+    other_token = register(client, "media-other@example.com")
+    project = client.post(
+        "/api/projects",
+        headers=bearer(owner_token),
+        json={"name": "Original preservation", "mode": "manual"},
+    )
+    assert project.status_code == 201
+    project_id = project.json()["id"]
+
+    original = BytesIO()
+    Image.new("RGB", (16, 8), color=(31, 82, 143)).save(original, format="PNG")
+    original_bytes = original.getvalue()
+    uploaded = client.post(
+        f"/api/projects/{project_id}/media",
+        headers=bearer(owner_token),
+        files={"file": ("original-panorama.png", original_bytes, "image/png")},
+    )
+    assert uploaded.status_code == 201, uploaded.text
+    asset_id = uploaded.json()["id"]
+
+    listed = client.get(f"/api/projects/{project_id}/media", headers=bearer(owner_token))
+    assert listed.status_code == 200
+    assert any(item["id"] == asset_id for item in listed.json())
+
+    original_download = client.get(f"/api/media/{asset_id}/file", headers=bearer(owner_token))
+    assert original_download.status_code == 200
+    assert original_download.content == original_bytes
+    assert original_download.headers["content-type"] == "image/png"
+    assert original_download.headers["x-content-type-options"] == "nosniff"
+
+    other_download = client.get(f"/api/media/{asset_id}/file", headers=bearer(other_token))
+    assert other_download.status_code == 404
+    other_list = client.get(f"/api/projects/{project_id}/media", headers=bearer(other_token))
+    assert other_list.status_code == 404
+
+
+def test_media_upload_rejects_mismatched_image_signature(client: TestClient) -> None:
+    token = register(client, "invalid-media@example.com")
+    project = client.post(
+        "/api/projects",
+        headers=bearer(token),
+        json={"name": "Reject invalid media", "mode": "manual"},
+    )
+    project_id = project.json()["id"]
+
+    response = client.post(
+        f"/api/projects/{project_id}/media",
+        headers=bearer(token),
+        files={"file": ("fake.png", b"this-is-not-a-png", "image/png")},
+    )
+    assert response.status_code == 415
+    listed = client.get(f"/api/projects/{project_id}/media", headers=bearer(token))
+    assert listed.status_code == 200
+    assert listed.json() == []
