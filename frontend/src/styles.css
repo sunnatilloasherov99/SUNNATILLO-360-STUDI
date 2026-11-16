@@ -160,7 +160,7 @@
 .inpainting-controls input{width:140px;accent-color:var(--accent,#8b9cff)}
 .inpainting-canvas-wrap{position:relative;width:100%;max-height:560px;overflow:hidden;border-radius:10px;background:#080d16}
 .inpainting-canvas-wrap img{display:block;width:100%;height:100%;object-fit:contain}
-.inpainting-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.inpainting-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;opacity:.48}
 .inpainting-preview{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .inpainting-preview>div{display:grid;gap:8px;min-width:0}
 .inpainting-preview strong{font-size:11px}
