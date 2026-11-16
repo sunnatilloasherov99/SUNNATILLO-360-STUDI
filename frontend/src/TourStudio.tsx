@@ -9,6 +9,8 @@ type Asset = { id: string; name: string; sizeBytes: number; url: string };
 type Hotspot = { target_scene_id: string; title: string; yaw: number; pitch: number };
 type Scene = { id: string; media_id: string; title: string; description: string; hotspots: Hotspot[] };
 type Tour = { title: string; description: string; scenes: Scene[] };
+type QualityCheck = { id: string; status: "pass" | "warning" | "fail"; message: string };
+type QualityReport = { summary: { pass: number; warning: number; fail: number }; checks: QualityCheck[] };
 type Props = { token: string; language: Language; projectId: string; projectName: string; onBack: () => void };
 
 const copy = {
@@ -21,7 +23,7 @@ const copy = {
   save:"Turni saqlash", saving:"Saqlanmoqda…", saved:"Tur saqlandi", export:"Loyihani ZIP shaklida eksport qilish", exporting:"Eksport qilinmoqda…", exported:"Loyiha ZIP fayli yuklab olindi", preview:"360° ko‘rib chiqish",
   chooseScene:"Ko‘rish uchun sahnani tanlang", needTwo:"Nuqta qo‘shish uchun kamida 2 ta sahna kerak.",
   loadError:"Turni yoki media fayllarni yuklab bo‘lmadi.", saveError:"Turni saqlab bo‘lmadi.",
-  markerHelp:"Nuqtani panoramada kerakli tomonga qarab turgan paytingizda qo‘shing. Burchaklarni gradusda kiriting.",
+  markerHelp:"Nuqtani panoramada kerakli tomonga qarab turgan paytingizda qo‘shing. Burchaklarni gradusda kiriting.", quality:"Loyiha sifatini tekshirish",checking:"Tekshirilmoqda…",qualityReport:"Sifat hisoboti",
   emptyHotspots:"Bu sahnada interaktiv nuqtalar yo‘q."
  },
  ru: {
@@ -33,7 +35,7 @@ const copy = {
   save:"Сохранить тур", saving:"Сохранение…", saved:"Тур сохранён", export:"Экспортировать проект в ZIP", exporting:"Экспорт…", exported:"ZIP-архив проекта скачан", preview:"Просмотр 360°",
   chooseScene:"Выберите сцену для просмотра", needTwo:"Для добавления точки нужно минимум 2 сцены.",
   loadError:"Не удалось загрузить тур или медиафайлы.", saveError:"Не удалось сохранить тур.",
-  markerHelp:"Добавляйте точку, когда панорама направлена в нужную сторону. Углы вводятся в градусах.",
+  markerHelp:"Добавляйте точку, когда панорама направлена в нужную сторону. Углы вводятся в градусах.", quality:"Проверить качество проекта",checking:"Проверка…",qualityReport:"Отчёт о качестве",
   emptyHotspots:"В этой сцене пока нет интерактивных точек."
  },
  en: {
@@ -45,7 +47,7 @@ const copy = {
   save:"Save tour", saving:"Saving…", saved:"Tour saved", export:"Export project as ZIP", exporting:"Exporting…", exported:"Project ZIP downloaded", preview:"360° preview",
   chooseScene:"Choose a scene to preview", needTwo:"At least 2 scenes are needed to add a hotspot.",
   loadError:"Could not load the tour or media files.", saveError:"Could not save the tour.",
-  markerHelp:"Add a hotspot while the panorama is facing the desired direction. Enter angles in degrees.",
+  markerHelp:"Add a hotspot while the panorama is facing the desired direction. Enter angles in degrees.", quality:"Run project quality check",checking:"Checking…",qualityReport:"Quality report",
   emptyHotspots:"This scene has no interactive hotspots yet."
  }
 };
@@ -68,7 +70,7 @@ export default function TourStudio({ token, language, projectId, projectName, on
  const [panoramaUrl,setPanoramaUrl]=useState<string|null>(null);
  const [loading,setLoading]=useState(true);
  const [saving,setSaving]=useState(false);
- const [exporting,setExporting]=useState(false);
+ const [exporting,setExporting]=useState(false);\n const [checking,setChecking]=useState(false);\n const [quality,setQuality]=useState<QualityReport|null>(null);
  const [error,setError]=useState("");
  const [message,setMessage]=useState("");
  const activeScene=useMemo(()=>tour.scenes.find(scene=>scene.id===activeSceneId)??tour.scenes[0]??null,[tour.scenes,activeSceneId]);
@@ -169,6 +171,16 @@ export default function TourStudio({ token, language, projectId, projectName, on
   if(!activeScene)return;
   updateScene(activeScene.id,{hotspots:activeScene.hotspots.filter((_,i)=>i!==index)});
  }
+ async function runQualityCheck(){
+  if(checking)return;
+  setChecking(true);setError("");setQuality(null);
+  try{
+   const response=await fetch(`/api/projects/${projectId}/quality`,{headers:{Authorization:`Bearer ${token}`}});
+   if(!response.ok)throw new Error();
+   setQuality(await response.json());
+  }catch{setError(t.loadError);}
+  finally{setChecking(false);}
+ }
  async function saveTour():Promise<boolean>{
   if(saving)return false;
   setSaving(true);setError("");setMessage("");
@@ -204,9 +216,9 @@ export default function TourStudio({ token, language, projectId, projectName, on
  }
 
  return <section className="tour-studio">
-  <div className="media-head"><div><div className="eyebrow muted">360° TOUR WORKSPACE · {projectName}</div><h2>{t.title}</h2></div><div className="editor-actions"><button className="secondary" disabled={exporting||saving} onClick={()=>void exportProject()}>{exporting?t.exporting:t.export}</button><button className="secondary" onClick={onBack}>{t.back}</button></div></div>
+  <div className="media-head"><div><div className="eyebrow muted">360° TOUR WORKSPACE · {projectName}</div><h2>{t.title}</h2></div><div className="editor-actions"><button className="secondary" disabled={checking} onClick={()=>void runQualityCheck()}>{checking?t.checking:t.quality}</button><button className="secondary" disabled={exporting||saving} onClick={()=>void exportProject()}>{exporting?t.exporting:t.export}</button><button className="secondary" onClick={onBack}>{t.back}</button></div></div>
   {loading?<div className="media-empty">…</div>:<>
-   <div className="tour-meta">
+   {quality&&<div className="quality-panel"><h3>{t.qualityReport}</h3><div className="quality-summary"><span className="quality-pass">✓ {quality.summary.pass}</span><span className="quality-warning">! {quality.summary.warning}</span><span className="quality-fail">× {quality.summary.fail}</span></div><div className="quality-check-list">{quality.checks.map(check=><div className="quality-check" key={check.id}><span className={`quality-status ${check.status}`}>{check.status==="pass"?"✓":check.status==="warning"?"!":"×"}</span><span>{check.message}</span></div>)}</div></div>}\n   <div className="tour-meta">
     <label className="field-label">{t.tourTitle}<input value={tour.title} onChange={e=>setTour(current=>({...current,title:e.target.value}))}/></label>
     <label className="field-label">{t.description}<textarea rows={2} value={tour.description} onChange={e=>setTour(current=>({...current,description:e.target.value}))}/></label>
    </div>
