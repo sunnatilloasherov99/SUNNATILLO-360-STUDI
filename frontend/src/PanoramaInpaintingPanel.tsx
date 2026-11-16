@@ -134,12 +134,24 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     setWorking(true);
     setMessage("");
     try {
-      const [sourceResponse, maskBlob] = await Promise.all([
-        fetch(imageUrl),
-        new Promise<Blob>((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Mask encode failed")), "image/png")),
-      ]);
+      const sourceResponse = await fetch(imageUrl);
       if (!sourceResponse.ok) throw new Error("Source image unavailable");
       const sourceBlob = await sourceResponse.blob();
+
+      // Providers expect a conventional binary mask: black outside the repair
+      // area and white inside it. The visible drawing canvas is transparent
+      // outside the brush strokes, so normalize it before sending.
+      const binaryMask = document.createElement("canvas");
+      binaryMask.width = canvas.width;
+      binaryMask.height = canvas.height;
+      const maskContext = binaryMask.getContext("2d");
+      if (!maskContext) throw new Error("Mask canvas unavailable");
+      maskContext.fillStyle = "#000000";
+      maskContext.fillRect(0, 0, binaryMask.width, binaryMask.height);
+      maskContext.drawImage(canvas, 0, 0);
+      const maskBlob = await new Promise<Blob>((resolve, reject) =>
+        binaryMask.toBlob(blob => blob ? resolve(blob) : reject(new Error("Mask encode failed")), "image/png")
+      );
       const form = new FormData();
       form.append("image", sourceBlob, "panorama.jpg");
       form.append("mask", maskBlob, "mask.png");
