@@ -511,7 +511,7 @@ async def export_trimmed_video(
             "-of", "default=noprint_wrappers=1:nokey=1", str(source),
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
         )
-        probe_out, probe_err = await asyncio.wait_for(probe.communicate(), timeout=20)
+        probe_out, _ = await asyncio.wait_for(probe.communicate(), timeout=20)
     except (OSError, asyncio.TimeoutError):
         raise HTTPException(status_code=503, detail="Could not inspect the uploaded video.")
     if probe.returncode != 0:
@@ -535,7 +535,7 @@ async def export_trimmed_video(
         "-map", "0:v:0", "-map", "0:a?", "-sn", "-dn",
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
-        "-movflags", "+faststart", str(output_path),
+        "-movflags", "+faststart", "-fs", str(settings.max_upload_mb * 2 * 1024 * 1024), str(output_path),
     ]
     try:
         process = await asyncio.create_subprocess_exec(
@@ -548,6 +548,10 @@ async def export_trimmed_video(
             await process.wait()
         output_path.unlink(missing_ok=True)
         raise HTTPException(status_code=504, detail="Video export timed out. Try a shorter clip.")
+    max_output_bytes = settings.max_upload_mb * 2 * 1024 * 1024
+    if output_path.is_file() and output_path.stat().st_size >= max_output_bytes:
+        output_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=413, detail="Trimmed video exceeds the export size limit. Choose a shorter clip or lower-resolution source.")
     if process.returncode != 0 or not output_path.is_file() or output_path.stat().st_size == 0:
         output_path.unlink(missing_ok=True)
         raise HTTPException(status_code=422, detail="FFmpeg could not export this video. Check that the source file is valid.")
