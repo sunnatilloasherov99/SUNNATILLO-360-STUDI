@@ -9,7 +9,7 @@ type Asset = { id: string; name: string; contentType: string; sizeBytes: number;
 type Hotspot = { target_scene_id: string; title: string; yaw: number; pitch: number };
 type Scene = { id: string; media_id: string; title: string; description: string; hotspots: Hotspot[] };
 type Tour = { title: string; description: string; scenes: Scene[] };
-type QualityCheck = { id: string; status: "pass" | "warning" | "fail"; message: string };
+type QualityCheck = { id: string; code?: string; status: "pass" | "warning" | "fail"; message: string; params?: Record<string, string | number> };
 type QualityReport = { summary: { pass: number; warning: number; fail: number }; checks: QualityCheck[] };
 type Props = { token: string; language: Language; projectId: string; projectName: string; onBack: () => void };
 
@@ -24,6 +24,7 @@ const copy = {
   chooseScene:"Ko‘rish uchun sahnani tanlang", needTwo:"Nuqta qo‘shish uchun kamida 2 ta sahna kerak.",
   loadError:"Turni yoki media fayllarni yuklab bo‘lmadi.", saveError:"Turni saqlab bo‘lmadi.",
   markerHelp:"Nuqtani panoramada kerakli tomonga qarab turgan paytingizda qo‘shing. Burchaklarni gradusda kiriting.", quality:"Loyiha sifatini tekshirish",checking:"Tekshirilmoqda…",qualityReport:"Sifat hisoboti",
+  qualityNoMedia:"Hali panorama yuklanmagan.",qualityVideoPending:"{name}: video sifati hozircha tekshirilmaydi.",qualityMissingFile:"{name}: asl fayl topilmadi.",qualityInvalidImage:"{name}: rasmni ochib bo‘lmadi.",qualityAspectRatio:"{name}: {width}×{height}, nisbat {ratio}:1.",qualityResolutionGood:"{name}: tavsiya etilgan aniqlik yetarli.",qualityResolutionLow:"{name}: kenglik 4000 px dan kichik.",qualityFormat:"{name}: format {format}.",qualityTourJson:"Virtual tur sozlamalarini o‘qib bo‘lmadi.",qualityNoScenes:"Virtual turda hali sahnalar yo‘q.",qualitySceneCount:"Virtual turda {count} ta sahna bor.",qualitySceneMedia:"{scene}: sahnada yaroqsiz panorama bor.",qualityBrokenHotspot:"{scene}: nuqta noto‘g‘ri sahnaga ulangan.",
   emptyHotspots:"Bu sahnada interaktiv nuqtalar yo‘q."
  },
  ru: {
@@ -36,6 +37,7 @@ const copy = {
   chooseScene:"Выберите сцену для просмотра", needTwo:"Для добавления точки нужно минимум 2 сцены.",
   loadError:"Не удалось загрузить тур или медиафайлы.", saveError:"Не удалось сохранить тур.",
   markerHelp:"Добавляйте точку, когда панорама направлена в нужную сторону. Углы вводятся в градусах.", quality:"Проверить качество проекта",checking:"Проверка…",qualityReport:"Отчёт о качестве",
+  qualityNoMedia:"Панорамы ещё не загружены.",qualityVideoPending:"{name}: проверка качества видео пока недоступна.",qualityMissingFile:"{name}: оригинальный файл не найден.",qualityInvalidImage:"{name}: изображение не удалось открыть.",qualityAspectRatio:"{name}: {width}×{height}, соотношение {ratio}:1.",qualityResolutionGood:"{name}: рекомендуемое разрешение достигнуто.",qualityResolutionLow:"{name}: ширина меньше 4000 пикселей.",qualityFormat:"{name}: формат {format}.",qualityTourJson:"Не удалось прочитать настройки тура.",qualityNoScenes:"В туре пока нет сцен.",qualitySceneCount:"В туре {count} сцен(ы).",qualitySceneMedia:"{scene}: у сцены отсутствует корректная панорама.",qualityBrokenHotspot:"{scene}: точка ведёт к несуществующей сцене.",
   emptyHotspots:"В этой сцене пока нет интерактивных точек."
  },
  en: {
@@ -48,9 +50,26 @@ const copy = {
   chooseScene:"Choose a scene to preview", needTwo:"At least 2 scenes are needed to add a hotspot.",
   loadError:"Could not load the tour or media files.", saveError:"Could not save the tour.",
   markerHelp:"Add a hotspot while the panorama is facing the desired direction. Enter angles in degrees.", quality:"Run project quality check",checking:"Checking…",qualityReport:"Quality report",
+  qualityNoMedia:"No panoramas have been uploaded yet.",qualityVideoPending:"{name}: video quality checks are not available yet.",qualityMissingFile:"{name}: original file is missing.",qualityInvalidImage:"{name}: the image could not be decoded.",qualityAspectRatio:"{name}: {width}×{height}, aspect ratio {ratio}:1.",qualityResolutionGood:"{name}: recommended resolution met.",qualityResolutionLow:"{name}: width is below 4000 pixels.",qualityFormat:"{name}: format {format}.",qualityTourJson:"The virtual tour settings could not be read.",qualityNoScenes:"The virtual tour has no scenes yet.",qualitySceneCount:"The virtual tour contains {count} scene(s).",qualitySceneMedia:"{scene}: this scene has missing or invalid panorama media.",qualityBrokenHotspot:"{scene}: this hotspot points to a missing scene.",
   emptyHotspots:"This scene has no interactive hotspots yet."
  }
 };
+
+function qualityText(check:QualityCheck,language:Language){
+ const t=copy[language];const p=check.params||{};
+ const name=String(p.name||"");const scene=String(p.scene||"");
+ const templates:Record<string,string>={
+  no_media:t.qualityNoMedia,video_check_pending:t.qualityVideoPending,missing_file:t.qualityMissingFile,
+  invalid_image:t.qualityInvalidImage,aspect_ratio:t.qualityAspectRatio,
+  image_format:t.qualityFormat,invalid_tour_json:t.qualityTourJson,no_tour_scenes:t.qualityNoScenes,
+  tour_scene_count:t.qualitySceneCount,scene_media_missing:t.qualitySceneMedia,broken_hotspot:t.qualityBrokenHotspot
+ };
+ if(check.code==="resolution")return (check.status==="pass"?t.qualityResolutionGood:t.qualityResolutionLow).replace("{name}",name);
+ let message=templates[check.code||""]||check.message;
+ message=message.replace("{name}",name).replace("{scene}",scene);
+ for(const [key,value] of Object.entries(p))message=message.replace(`{${key}}`,String(value));
+ return message;
+}
 
 function escapeHtml(value: string) {
  return value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
@@ -222,7 +241,7 @@ export default function TourStudio({ token, language, projectId, projectName, on
  return <section className="tour-studio">
   <div className="media-head"><div><div className="eyebrow muted">360° TOUR WORKSPACE · {projectName}</div><h2>{t.title}</h2></div><div className="editor-actions"><button className="secondary" disabled={checking} onClick={()=>void runQualityCheck()}>{checking?t.checking:t.quality}</button><button className="secondary" disabled={exporting||saving} onClick={()=>void exportProject()}>{exporting?t.exporting:t.export}</button><button className="secondary" onClick={onBack}>{t.back}</button></div></div>
   {loading?<div className="media-empty">…</div>:<>
-   {quality&&<div className="quality-panel"><h3>{t.qualityReport}</h3><div className="quality-summary"><span className="quality-pass">✓ {quality.summary.pass}</span><span className="quality-warning">! {quality.summary.warning}</span><span className="quality-fail">× {quality.summary.fail}</span></div><div className="quality-check-list">{quality.checks.map(check=><div className="quality-check" key={check.id}><span className={`quality-status ${check.status}`}>{check.status==="pass"?"✓":check.status==="warning"?"!":"×"}</span><span>{check.message}</span></div>)}</div></div>}
+   {quality&&<div className="quality-panel"><h3>{t.qualityReport}</h3><div className="quality-summary"><span className="quality-pass">✓ {quality.summary.pass}</span><span className="quality-warning">! {quality.summary.warning}</span><span className="quality-fail">× {quality.summary.fail}</span></div><div className="quality-check-list">{quality.checks.map(check=><div className="quality-check" key={check.id}><span className={`quality-status ${check.status}`}>{check.status==="pass"?"✓":check.status==="warning"?"!":"×"}</span><span>{qualityText(check,language)}</span></div>)}</div></div>}
    <div className="tour-meta">
     <label className="field-label">{t.tourTitle}<input value={tour.title} onChange={e=>setTour(current=>({...current,title:e.target.value}))}/></label>
     <label className="field-label">{t.description}<textarea rows={2} value={tour.description} onChange={e=>setTour(current=>({...current,description:e.target.value}))}/></label>
