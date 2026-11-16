@@ -15,6 +15,7 @@
 - Initial panorama adjustments (brightness, contrast and saturation) are stored as project settings and previewed non-destructively; they do not overwrite source files.
 - Edited images are exported as new JPEG files; uploaded originals remain untouched.
 - Multi-scene tour configuration, scene order and scene-to-scene hotspot links are stored per project and validated against media owned by that project.
+- Owners can enable or revoke a random-token public tour link; public tour metadata and image delivery are restricted to the shared project and rate-limited.
 - Authenticated quality reports inspect original image integrity, panorama aspect ratio, recommended width and tour references.
 - Authenticated project ZIP exports package metadata, edit settings, tour configuration and available original media.
 - Edits are represented as project instructions and metadata, then rendered to new output files.
