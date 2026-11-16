@@ -24,7 +24,8 @@ An independent, portable web platform for professional 360° media workflows and
 - Save non-destructive 360° video trim in/out markers per project, preview the selected range and export the trimmed result as MP4 with server-side FFmpeg; the original video remains unchanged.
 - Original imported panorama is not modified.
 - Non-destructive brightness, contrast and saturation adjustments can be previewed and saved per project.
-- Assisted panorama seam repair: estimate the lowest-contrast vertical seam position, manually reposition it, and apply adjustable 0–5% edge feather blending.\n- Manual clone-brush repair layer with a selectable source point, soft brush edge, adjustable size, stroke-relative sampling, undo/redo, clear, and target-side 360° left/right wrapping. Repairs are previewed non-destructively and included in a separate JPEG export or saved project copy; the original upload remains unchanged. Source sampling across the image boundary is not yet supported.
+- Assisted panorama seam repair: estimate the lowest-contrast vertical seam position, manually reposition it, and apply adjustable 0–5% edge feather blending.
+- Manual clone-brush repair layer with a selectable source point, soft brush edge, adjustable size, stroke-relative sampling, undo/redo, clear, and target-side 360° left/right wrapping. Repairs are previewed non-destructively and included in a separate JPEG export or saved project copy; the original upload remains unchanged. Source sampling across the image boundary is not yet supported.
 - Export adjusted panorama images as new JPEG files while preserving the uploaded original.
 - Build multi-scene virtual tours from uploaded panoramas, reorder scenes and connect them with clickable in-view hotspots.
 - Create revocable public tour links; public viewers can navigate scenes and hotspots without logging in.
