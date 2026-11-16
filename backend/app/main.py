@@ -122,6 +122,10 @@ async def enforce_request_rate_limits(request: Request, call_next):
         ("POST", "/api/ai/assist"): 20,
     }
     limit = limits.get((request.method, request.url.path))
+    if request.method == "GET" and request.url.path.startswith("/api/public/tours/"):
+        limit = 60
+    elif request.method == "GET" and request.url.path.startswith("/api/public/media/"):
+        limit = 120
     if limit is None:
         return await call_next(request)
 
