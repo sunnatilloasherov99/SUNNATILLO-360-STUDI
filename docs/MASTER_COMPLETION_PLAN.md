@@ -61,7 +61,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] Tahrirlangan nusxa source_asset_id orqali asl media bilan bog‘lanadi; 0002_media_source_asset migratsiyasi va API validatsiyasi qo‘shildi.
 - [x] Original media baytlari o‘zgarmasligi, source asset ownership, noto‘g‘ri MIME/signature va hosila media bog‘lanishi uchun backend testlari qo‘shildi.
 - [x] GitHub Actions frontend/backend/infrastructure tekshiruvlari yangi o‘zgarishlar bilan muvaffaqiyatli yakunlandi (run `43933375111`; barcha 3 job `success`).
-- [ ] Haqiqiy foydalanuvchi panoramalari bilan preview, clone brush, AI natijasi va JPEG eksport sifatini vizual sinash.
+- [ ] Haqiqiy foydalanuvchi panoramalari bilan preview, clone brush, AI natijasi va JPEG eksport sifatini vizual sinash. Sinov tartibi: [PANORAMA_BROWSER_ACCEPTANCE.md](./PANORAMA_BROWSER_ACCEPTANCE.md).
 
 **5-bosqichni yopish mezoni:** foydalanuvchi panoramani xavfsiz tekshirib, nuqsonni qo'lda tuzata oladi, kerak bo'lsa ixtiyoriy lokal AI natijasini ko'rib tasdiqlaydi va original faylni saqlagan holda yangi nusxa eksport qiladi.
 
@@ -112,9 +112,11 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 ## Hozirgi navbatdagi ishlar
 
 1. AI maska tuzatishi va source_asset_id migratsiyasi, API hamda backend testlari CI natijasini tasdiqlash — bajarildi (run `43933375111`).
-2. 5.3 uchun ComfyUI HTTP bridge va haqiqiy lokal model bilan integratsion sinov.
-3. 5.4 uchun browser darajasida eksport qatlamalari va AI rollback vizual sinovi.
-4. Haqiqiy telefon panoramasi bilan yakuniy qabul sinovi.
+2. So‘nggi kod commitidagi asinxron holat yangilanishi tuzatishi uchun frontend/backend/infrastructure CI — bajarildi, barcha 3 job success (run `43934039556`).
+3. Browser darajasidagi qo‘lda qabul sinovlari uchun bosqichma-bosqich checklist yaratildi: [PANORAMA_BROWSER_ACCEPTANCE.md](./PANORAMA_BROWSER_ACCEPTANCE.md).
+4. 5.3 uchun ComfyUI HTTP bridge va haqiqiy lokal model bilan integratsion sinov.
+5. 5.4 uchun checklist asosida browser darajasida eksport qatlamalari va AI rollback vizual sinovi.
+6. Haqiqiy telefon panoramasi bilan yakuniy qabul sinovi.
 
 ## Reliz hisoboti
 
