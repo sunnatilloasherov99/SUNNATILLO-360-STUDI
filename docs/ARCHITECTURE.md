@@ -3,7 +3,7 @@
 ## Core boundaries
 - The React frontend communicates with the FastAPI backend through HTTP APIs.
 - Domain logic must not depend on a hosting provider.
-- Storage access will use an application storage interface; local filesystem is the initial adapter, with S3-compatible storage as an optional future adapter.
+- Storage access uses the local filesystem adapter initially; S3-compatible storage can be added without changing domain logic.
 - AI providers will be adapters behind a common internal contract. No provider is mandatory.
 - Publishing targets are capability-checked adapters. Never claim a platform can publish tours unless its official API, partner agreement and account permissions allow it.
 - Localization dictionaries are the source of truth. Every new UI key must be added to Uzbek, Russian and English.
@@ -14,6 +14,13 @@
 - AI suggestions are proposals; applying them requires explicit user approval.
 - External AI receives only the minimum selected context after explicit user consent.
 - API keys and provider credentials stay server-side, outside frontend bundles and source control.
+- **Current security limitation:** project and media API routes do not yet require authentication or enforce project ownership. Do not expose the API to the public internet until authentication, authorization, upload validation and rate limiting are implemented.
+
+## Persistence
+- Projects and media metadata are stored through SQLAlchemy; PostgreSQL is the Docker default and SQLite is available for local development.
+- Original media files are stored in a configurable persistent directory.
+- Docker Compose uses separate persistent volumes for the database and media files.
+- Database schema changes currently use SQLAlchemy `create_all`; Alembic migrations are required before production use.
 
 ## Portability
 - Docker Compose defines the baseline self-hosted deployment.
@@ -32,4 +39,4 @@
 24. Editable project delivery, exports and backup.
 
 ## Current status
-The initial commit establishes a multilingual web shell, startup-mode selection, browser-local project list, FastAPI health endpoint and Docker-based self-hosting baseline. Full media editing, durable server-side projects, authentication, AI adapters, publishing integrations and automated quality analysis are not yet implemented.
+Implemented foundation: multilingual web shell, startup-mode selection, server-backed project CRUD, persistent panorama upload/listing, 360° panorama viewer and Docker self-hosting baseline. Not yet implemented: user authentication and project ownership, full media editing, AI adapters, publishing integrations, automated quality analysis, export bundles and backup tooling.
