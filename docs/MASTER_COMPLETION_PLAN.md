@@ -37,11 +37,11 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] API javobining integratsion testi qo'shildi (`test_quality_report_includes_heuristic_vertical_discontinuity_candidates`).
 
 ### 5.2 Qo'lda tuzatish
-- [ ] Brauzerda nuqson maydonini belgilash (mask/brush).
-- [ ] Clone/patch vositasi va manba maydonini tanlash.
+- [x] Brauzerda nuqson maydonini belgilash va yumshoq chetli clone brush qo‘shildi.
+- [x] Clone/patch vositasi va manba maydonini tanlash, cho‘tka o‘lchami hamda stroke bo‘ylab manba siljishi qo‘shildi.
 - [ ] Chap-o'ng chegaradan o'tuvchi 360° maskani to'g'ri o'rash.
-- [ ] Preview, bekor qilish, undo/redo.
-- [ ] Asl faylga tegmasdan yangi hosila media saqlash.
+- [x] Editor preview, undo/redo va tuzatish qatlamini tozalash qo‘shildi.
+- [x] Tuzatish qatlamini asl faylga tegmasdan yangi hosila media eksportiga qo‘shildi.
 
 ### 5.3 Ixtiyoriy lokal AI inpainting
 - [ ] Provider-neutral adapter.
@@ -103,9 +103,10 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 
 ## Hozirgi navbatdagi ishlar
 
-1. 5.1 uchun API integratsion test va diagnostika javobini tasdiqlash.
-2. 5.2 uchun frontend panorama editoridagi mavjud seam/adjustment komponentlarini qayta ishlatib, mask/clone workflow'ni bosqichma-bosqich qo'shish.
-3. Har bir commitdan so'ng CI natijasini qayta tekshirish.
+1. 5.2 clone brush uchun frontend build va vizual sinovni yakunlash.
+2. 360° chetlarida clone source sampling va maska xatti-harakatini mustahkamlash.
+3. Tahrir qatlamini saqlash va haqiqiy panorama bilan qabul sinovlarini qo‘shish.
+4. Har bir commitdan so‘ng CI natijasini qayta tekshirish.
 
 ## Reliz hisoboti
 
