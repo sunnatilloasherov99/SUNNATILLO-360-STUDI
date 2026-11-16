@@ -49,12 +49,26 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
   const start=strokeStartRef.current||target;
   let offsetX=target.x-start.x;
   if(offsetX>canvas.width/2)offsetX-=canvas.width;else if(offsetX< -canvas.width/2)offsetX+=canvas.width;
-  const rawSourceX=((source.x+offsetX)%canvas.width+canvas.width)%canvas.width;
-  const sx=Math.max(radius,Math.min(canvas.width-radius,rawSourceX));
+  const sx=((source.x+offsetX)%canvas.width+canvas.width)%canvas.width;
   const sy=Math.max(radius,Math.min(canvas.height-radius,source.y+(target.y-start.y)));
-  const stampCanvas=document.createElement("canvas");stampCanvas.width=radius*2;stampCanvas.height=radius*2;
+  const diameter=radius*2;
+  const stampCanvas=document.createElement("canvas");stampCanvas.width=diameter;stampCanvas.height=diameter;
   const stampContext=stampCanvas.getContext("2d");if(!stampContext)return;
-  stampContext.drawImage(image,sx-radius,sy-radius,radius*2,radius*2,0,0,radius*2,radius*2);
+  // Read the clone source as a wrapped horizontal strip so samples can cross
+  // the equirectangular panorama's left/right boundary without a blank seam.
+  const sourceLeft=sx-radius;
+  if(sourceLeft<0){
+   const leftWidth=-sourceLeft;
+   stampContext.drawImage(image,canvas.width-leftWidth,sy-radius,leftWidth,diameter,0,0,leftWidth,diameter);
+   stampContext.drawImage(image,0,sy-radius,diameter-leftWidth,diameter,leftWidth,0,diameter-leftWidth,diameter);
+  }else if(sourceLeft+diameter>canvas.width){
+   const rightWidth=sourceLeft+diameter-canvas.width;
+   const mainWidth=diameter-rightWidth;
+   stampContext.drawImage(image,sourceLeft,sy-radius,mainWidth,diameter,0,0,mainWidth,diameter);
+   stampContext.drawImage(image,0,sy-radius,rightWidth,diameter,mainWidth,0,rightWidth,diameter);
+  }else{
+   stampContext.drawImage(image,sourceLeft,sy-radius,diameter,diameter,0,0,diameter,diameter);
+  }
   stampContext.globalCompositeOperation="destination-in";
   const gradient=stampContext.createRadialGradient(radius,radius,radius*0.55,radius,radius,radius);
   gradient.addColorStop(0,"rgba(0,0,0,1)");gradient.addColorStop(1,"rgba(0,0,0,0)");
@@ -70,7 +84,7 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
   if(sourceMode){
    const canvas=patchCanvasRef.current;if(!canvas)return;
    const radius=Math.max(2,Math.min(brushSize,Math.floor(Math.min(canvas.width,canvas.height)/4)));
-   sourceRef.current={x:Math.max(radius,Math.min(canvas.width-radius,p.x)),y:Math.max(radius,Math.min(canvas.height-radius,p.y))};
+   sourceRef.current={x:p.x,y:Math.max(radius,Math.min(canvas.height-radius,p.y))};
    setSourceLabel(Math.round(sourceRef.current.x)+", "+Math.round(sourceRef.current.y));setSourceMode(false);setNotice("");return;
   }
   if(!sourceRef.current){setNotice(t.needSource);return;}
