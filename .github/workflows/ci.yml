@@ -86,4 +86,4 @@ jobs:
       - name: Validate Docker Compose configuration
         run: |
           cp infra/.env.example infra/.env
-          docker compose -f infra/docker-compose.yml config --quiet
+          docker compose --env-file infra/.env -f infra/docker-compose.yml config --quiet
