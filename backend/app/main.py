@@ -7,6 +7,8 @@ import hashlib
 import secrets
 import json
 import base64
+import shutil
+import subprocess
 from io import BytesIO
 from zipfile import ZIP_DEFLATED, ZipFile
 from PIL import Image, UnidentifiedImageError
@@ -17,6 +19,7 @@ from typing import Generator, Literal
 from fastapi import FastAPI, Depends, File, HTTPException, UploadFile, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response, JSONResponse
+from starlette.background import BackgroundTask
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, create_engine, select, update
@@ -257,6 +260,12 @@ class VideoTrimSettings(BaseModel):
     end_seconds: float = Field(default=0.0, ge=0.0, le=86400.0)
 
 
+class VideoExportRequest(BaseModel):
+    media_id: str = Field(min_length=1, max_length=36)
+
+
+
+
 class AIRequest(BaseModel):
     role: Literal["panorama_quality", "tour_planner", "tour_description", "stitching_advisor", "collaboration"]
     prompt: str = Field(min_length=1, max_length=4000)
@@ -467,6 +476,88 @@ def save_video_settings(project_id: str, payload: VideoTrimSettings, user: User 
     project.updated_at = now_utc()
     db.commit()
     return payload.model_dump()
+
+
+@app.post("/api/projects/{project_id}/video-export")
+async def export_trimmed_video(
+    project_id: str,
+    payload: VideoExportRequest,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    asset = db.scalar(
+        select(MediaAsset).where(MediaAsset.id == payload.media_id, MediaAsset.project_id == project_id)
+    )
+    if not asset or not asset.content_type.startswith("video/"):
+        raise HTTPException(status_code=404, detail="Video not found in this project.")
+    source = storage_dir / asset.stored_name
+    if not source.is_file():
+        raise HTTPException(status_code=404, detail="Stored video file is missing.")
+    ffmpeg = shutil.which("ffmpeg")
+    ffprobe = shutil.which("ffprobe")
+    if not ffmpeg or not ffprobe:
+        raise HTTPException(status_code=503, detail="Video export is unavailable because FFmpeg is not installed on this server.")
+    try:
+        saved = json.loads(project.edit_settings_json or "{}").get("video", {})
+        trim = VideoTrimSettings.model_validate(saved)
+    except (json.JSONDecodeError, AttributeError, ValueError):
+        raise HTTPException(status_code=422, detail="Saved video trim settings are invalid.")
+    try:
+        probe = await asyncio.create_subprocess_exec(
+            ffprobe, "-v", "error", "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1", str(source),
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        )
+        probe_out, probe_err = await asyncio.wait_for(probe.communicate(), timeout=20)
+    except (OSError, asyncio.TimeoutError):
+        raise HTTPException(status_code=503, detail="Could not inspect the uploaded video.")
+    if probe.returncode != 0:
+        raise HTTPException(status_code=422, detail="The uploaded video could not be decoded.")
+    try:
+        duration = float(probe_out.decode("utf-8").strip())
+    except (ValueError, UnicodeDecodeError):
+        raise HTTPException(status_code=422, detail="The uploaded video duration is invalid.")
+    start = trim.start_seconds
+    end = trim.end_seconds if trim.end_seconds > 0 else duration
+    if duration <= 0 or duration > 1800:
+        raise HTTPException(status_code=422, detail="Video export supports videos up to 30 minutes.")
+    if start >= duration or end > duration or end <= start:
+        raise HTTPException(status_code=422, detail="Trim range must be within the video duration.")
+    output_id = str(uuid.uuid4())
+    output_name = f"{output_id}.mp4"
+    output_path = storage_dir / output_name
+    command = [
+        ffmpeg, "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
+        "-ss", f"{start:.3f}", "-i", str(source), "-t", f"{end-start:.3f}",
+        "-map", "0:v:0", "-map", "0:a?", "-sn", "-dn",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+        "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
+        "-movflags", "+faststart", str(output_path),
+    ]
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *command, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE
+        )
+        _, stderr = await asyncio.wait_for(process.communicate(), timeout=900)
+    except (OSError, asyncio.TimeoutError):
+        if "process" in locals() and process.returncode is None:
+            process.kill()
+            await process.wait()
+        output_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=504, detail="Video export timed out. Try a shorter clip.")
+    if process.returncode != 0 or not output_path.is_file() or output_path.stat().st_size == 0:
+        output_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=422, detail="FFmpeg could not export this video. Check that the source file is valid.")
+    return FileResponse(
+        output_path,
+        media_type="video/mp4",
+        filename=f"sunnatillo-360-{project_id}-trimmed.mp4",
+        headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"},
+        background=BackgroundTask(output_path.unlink, missing_ok=True),
+    )
 
 
 @app.get("/api/projects/{project_id}/share")
