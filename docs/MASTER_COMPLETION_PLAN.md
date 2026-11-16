@@ -55,10 +55,12 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] `/api/ai/capabilities` orqali provider mavjudligi tekshiriladi; AI tugmasi provider sozlanmagan bo‘lsa o‘chiq, qo‘lda tuzatish vositasi alohida ishlashda davom etadi.
 
 ### 5.4 Eksport va qabul sinovlari
-- [ ] Tahrir tarixi va source asset bog'lanishi.
-- [ ] Ruxsat/ownership, mask chegarasi, buzilgan rasm va original o'zgarmasligi testlari.
-- [ ] Oldin/keyin ko'rish va JPEG eksport.
-- [ ] Haqiqiy foydalanuvchi panoramalari bilan sifat sinovi.
+- [x] AI natijasi → rang/yorug‘lik → clone brush qatlamasi → chok sozlamalari → JPEG eksport yagona render pipeline orqali bajariladi.
+- [x] AI natijasini qabul qilishdan oldin preview qilish va qabul qilingan AI qatlamasini bekor qilib original manbaga qaytish boshqaruvi qo‘shildi.
+- [x] Tahrirlangan nusxa source_asset_id orqali asl media bilan bog‘lanadi; 0002_media_source_asset migratsiyasi va API validatsiyasi qo‘shildi.
+- [x] Original media baytlari o‘zgarmasligi, source asset ownership, noto‘g‘ri MIME/signature va hosila media bog‘lanishi uchun backend testlari qo‘shildi.
+- [ ] GitHub Actions frontend/backend/infrastructure tekshiruvlarini yangi o‘zgarishlar bilan muvaffaqiyatli yakunlash.
+- [ ] Haqiqiy foydalanuvchi panoramalari bilan preview, clone brush, AI natijasi va JPEG eksport sifatini vizual sinash.
 
 **5-bosqichni yopish mezoni:** foydalanuvchi panoramani xavfsiz tekshirib, nuqsonni qo'lda tuzata oladi, kerak bo'lsa ixtiyoriy lokal AI natijasini ko'rib tasdiqlaydi va original faylni saqlagan holda yangi nusxa eksport qiladi.
 
@@ -108,10 +110,10 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 
 ## Hozirgi navbatdagi ishlar
 
-1. 5.2 clone brush uchun frontend build va vizual sinovni yakunlash.
+1. Yangi source_asset_id migratsiyasi, API va backend testlari CI natijasini tasdiqlash.
 2. 5.3 uchun ComfyUI HTTP bridge va haqiqiy lokal model bilan integratsion sinov.
-3. 5.4 uchun AI natijasi, manual patch va rang sozlamalari birga eksport bo‘lishini avtomatlashtirilgan testlar bilan tekshirish.
-4. Haqiqiy telefon panoramasi bilan vizual qabul sinovi; CI natijasini kuzatish.
+3. 5.4 uchun browser darajasida eksport qatlamalari va AI rollback vizual sinovi.
+4. Haqiqiy telefon panoramasi bilan yakuniy qabul sinovi.
 
 ## Reliz hisoboti
 
