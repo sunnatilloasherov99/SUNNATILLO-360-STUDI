@@ -56,6 +56,7 @@ bash restore.sh ../backups/studio-db-TIMESTAMP.dump ../backups/studio-media-TIME
 Backups include a PostgreSQL custom-format dump, original media archive and SHA-256 checksums. Store copies off-server in encrypted storage. Restore replaces the current database and media; the script requires typing `RESTORE` before proceeding. Only the web service publishes a host port; the API, PostgreSQL and Redis stay on the private Docker network. Put the web entry point behind HTTPS and keep SSH/firewall access restricted.
 
 ## Implemented boundaries
+- Installable PWA shell for desktop/mobile browsers; offline mode caches only the app shell, not private API data.
 - Account registration/login and per-user project/media access control.
 - 360° panorama viewing, non-destructive image adjustments and edited JPEG export.
 - Multi-scene virtual-tour builder with clickable scene hotspots and revocable public viewing links.
