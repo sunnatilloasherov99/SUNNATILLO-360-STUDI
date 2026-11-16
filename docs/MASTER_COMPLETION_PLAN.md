@@ -43,6 +43,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] Editor preview, undo/redo va tuzatish qatlamini tozalash qo‘shildi.
 - [x] Tuzatish qatlamini asl faylga tegmasdan yangi hosila media eksportiga qo‘shildi.
 - [x] Panorama almashtirilganda clone brush manbasi, undo/redo tarixi va faol pointer chizishi tozalanadi; pointer capture yo‘qolganda ham chizish holati yopiladi (commit `3b9b5e6`).
+- [x] Keshlangan rasm tez yuklanganda ham clone canvas o‘lchamlari to‘g‘ri boshlanishi uchun `complete/naturalWidth` holati tekshiriladi (commit `c8d61ae`).
 - [x] CI run 43918087957: frontend build, backend testlari va Docker/infratuzilma tekshiruvlari muvaffaqiyatli.
 
 ### 5.3 Ixtiyoriy lokal AI inpainting
