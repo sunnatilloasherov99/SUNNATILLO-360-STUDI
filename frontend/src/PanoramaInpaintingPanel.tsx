@@ -99,6 +99,8 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
       .catch(() => {
         if (active) setConfigured(false);
       });
+    drawing.current = false;
+    setWorking(false);
     setHasMask(false);
     setResultUrl(current => {
       if (current) URL.revokeObjectURL(current);
@@ -141,23 +143,24 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     if (!window.confirm(t.confirm)) return;
     const requestId = requestVersion.current;
     const requestedImageUrl = imageUrl;
-    // Freeze the exact mask the user confirmed. Further pointer events are
-    // ignored while this request is running, so the uploaded mask cannot
-    // silently differ from the consent prompt.
-    const binaryMask = document.createElement("canvas");
-    binaryMask.width = canvas.width;
-    binaryMask.height = canvas.height;
-    const maskContext = binaryMask.getContext("2d");
-    if (!maskContext) { setMessage(t.unavailable); return; }
-    maskContext.fillStyle = "#000000";
-    maskContext.fillRect(0, 0, binaryMask.width, binaryMask.height);
-    maskContext.drawImage(canvas, 0, 0);
-    const maskBlob = await new Promise<Blob>((resolve, reject) =>
-      binaryMask.toBlob(blob => blob ? resolve(blob) : reject(new Error("Mask encode failed")), "image/png")
-    );
     setWorking(true);
     setMessage("");
     try {
+      // Freeze the exact mask the user confirmed. Further pointer events are
+      // ignored while this request is running, so the uploaded mask cannot
+      // silently differ from the consent prompt.
+      const binaryMask = document.createElement("canvas");
+      binaryMask.width = canvas.width;
+      binaryMask.height = canvas.height;
+      const maskContext = binaryMask.getContext("2d");
+      if (!maskContext) throw new Error("Mask canvas unavailable");
+      maskContext.fillStyle = "#000000";
+      maskContext.fillRect(0, 0, binaryMask.width, binaryMask.height);
+      maskContext.drawImage(canvas, 0, 0);
+      const maskBlob = await new Promise<Blob>((resolve, reject) =>
+        binaryMask.toBlob(blob => blob ? resolve(blob) : reject(new Error("Mask encode failed")), "image/png")
+      );
+
       const sourceResponse = await fetch(requestedImageUrl);
       if (!sourceResponse.ok) throw new Error("Source image unavailable");
       const sourceBlob = await sourceResponse.blob();
