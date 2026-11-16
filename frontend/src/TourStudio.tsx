@@ -91,11 +91,12 @@ export default function TourStudio({ token, language, projectId, projectName, on
     const media=await mediaResponse.json();
     const stored=await tourResponse.json();
     if(cancelled)return;
-    setAssets(Array.isArray(media)?media:[]);
+    const imageAssets=(Array.isArray(media)?media:[]).filter((asset:Asset)=>asset.contentType.startsWith("image/"));
+    setAssets(imageAssets);
     const scenes=Array.isArray(stored.scenes)?stored.scenes:[];
     setTour({title:stored.title||projectName,description:stored.description||"",scenes});
     setActiveSceneId(scenes[0]?.id||"");
-    setSelectedMediaId((Array.isArray(media)?media:[]).find((asset:Asset)=>!scenes.some((scene:Scene)=>scene.media_id===asset.id))?.id||"");
+    setSelectedMediaId(imageAssets.find((asset:Asset)=>!scenes.some((scene:Scene)=>scene.media_id===asset.id))?.id||"");
    }catch{if(!cancelled)setError(t.loadError);}
    finally{if(!cancelled)setLoading(false);}
   }
