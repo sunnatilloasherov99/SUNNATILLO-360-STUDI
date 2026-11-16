@@ -1,0 +1,19 @@
+{
+  "name": "SUNNATILLO 360° STUDIO",
+  "short_name": "360 Studio",
+  "description": "Professional 360° media and virtual tour workspace",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
