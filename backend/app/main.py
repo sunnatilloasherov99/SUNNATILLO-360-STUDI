@@ -20,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response, JSONResponse
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, create_engine, select
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, create_engine, select, update
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker, Session
 import jwt
 import httpx
@@ -323,8 +323,13 @@ def register(payload: RegisterPayload, db: Session = Depends(get_db)):
         raise HTTPException(status_code=422, detail="Email manzilini to‘g‘ri kiriting.")
     if db.scalar(select(User).where(User.email == email)):
         raise HTTPException(status_code=409, detail="Bu email bilan hisob mavjud.")
+    first_user = db.scalar(select(User.id).limit(1)) is None
     user = User(id=str(uuid.uuid4()), email=email, password_hash=hash_password(payload.password), created_at=now_utc())
     db.add(user)
+    db.flush()
+    if first_user:
+        # Safely adopt projects created before accounts existed.
+        db.execute(update(Project).where(Project.owner_id.is_(None)).values(owner_id=user.id))
     db.commit()
     db.refresh(user)
     return {"access_token": issue_token(user), "token_type": "bearer", "user": {"id": user.id, "email": user.email}}
