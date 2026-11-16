@@ -32,16 +32,14 @@ An independent, portable web platform for professional 360° media workflows and
 - GitHub Actions frontend build and backend syntax checks.
 
 ### Not implemented yet
-- Production hardening still required before public launch: Alembic migrations, rate limiting/abuse protection, email verification/password reset, HTTPS and deployment secrets.
-- Email registration/login, signed expiring access tokens, salted password hashing and per-user project/media access control.
-- Private project-scoped panorama settings for non-destructive brightness, contrast and saturation adjustments.
+- Production hardening still required before public launch: Alembic migrations, rate limiting/abuse protection, email verification/password reset, HTTPS and production secrets.
 - Full timeline editor, video processing, color grading, audio and keyframes.
 - AI provider adapters and consent-based shared project context.
-- Stitching repair and automated quality analysis.
-- Full tour package publishing/export and hosted public tour sharing.
+- Advanced seam/stitching defect detection and automatic stitching repair.
+- Standalone hosted tour publishing and public tour sharing.
 - Google Street View publishing OAuth/upload workflow.
 - Yandex Maps and 2GIS publishing adapters.
-- Export bundles, backups and desktop packaging.
+- Automated database/media backups and desktop packaging.
 
 The current panorama viewer is a first editing milestone, not a complete professional editor or a direct publishing tool.
 
