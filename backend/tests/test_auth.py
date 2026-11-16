@@ -111,3 +111,60 @@ def test_projects_and_editor_settings_are_private_to_owner(client: TestClient) -
         headers=bearer(other_token),
     )
     assert other_media.status_code == 404
+
+
+def test_tour_is_private_and_references_owned_media(client: TestClient) -> None:
+    owner_token = register(client, "tour-owner@example.com")
+    other_token = register(client, "tour-other@example.com")
+    created = client.post(
+        "/api/projects",
+        headers=bearer(owner_token),
+        json={"name": "Virtual tour", "mode": "manual"},
+    )
+    project_id = created.json()["id"]
+
+    uploaded = client.post(
+        f"/api/projects/{project_id}/media",
+        headers=bearer(owner_token),
+        files={"file": ("entry.png", b"\\x89PNG\\r\\n\\x1a\\nmock-image", "image/png")},
+    )
+    assert uploaded.status_code == 201
+    media_id = uploaded.json()["id"]
+
+    tour = {
+        "title": "My 360 tour",
+        "description": "A short walkthrough",
+        "scenes": [
+            {
+                "id": "scene-entry",
+                "media_id": media_id,
+                "title": "Entry",
+                "description": "Start here",
+                "hotspots": [],
+            }
+        ],
+    }
+    saved = client.put(
+        f"/api/projects/{project_id}/tour",
+        headers=bearer(owner_token),
+        json=tour,
+    )
+    assert saved.status_code == 200
+    assert saved.json()["scenes"][0]["media_id"] == media_id
+
+    private_read = client.get(
+        f"/api/projects/{project_id}/tour",
+        headers=bearer(other_token),
+    )
+    assert private_read.status_code == 404
+
+    invalid_tour = {
+        **tour,
+        "scenes": [{**tour["scenes"][0], "media_id": "not-owned-media"}],
+    }
+    invalid_save = client.put(
+        f"/api/projects/{project_id}/tour",
+        headers=bearer(owner_token),
+        json=invalid_tour,
+    )
+    assert invalid_save.status_code == 422
