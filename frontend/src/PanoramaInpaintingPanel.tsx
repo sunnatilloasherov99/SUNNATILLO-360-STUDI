@@ -63,6 +63,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
   const t = labels[language];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
+  const requestVersion = useRef(0);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [brush, setBrush] = useState(36);
   const [working, setWorking] = useState(false);
@@ -103,7 +104,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
       return null;
     });
     setMessage("");
-    return () => { active = false; };
+    return () => { active = false; requestVersion.current += 1; };
   }, [imageUrl, token, t.unavailable]);
 
   useEffect(() => () => {
