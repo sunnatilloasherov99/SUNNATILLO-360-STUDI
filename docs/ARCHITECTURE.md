@@ -31,7 +31,7 @@
 - Projects and media metadata are stored through SQLAlchemy; PostgreSQL is the Docker default and SQLite is available for local development.
 - Original media files are stored in a configurable persistent directory.
 - Docker Compose uses separate persistent volumes for the database and media files.
-- Database schema changes currently use SQLAlchemy `create_all`; Alembic migrations are required before production use.
+- Database schema changes are managed through Alembic migrations; the API container applies pending migrations before startup.
 
 ## Portability
 - Docker Compose defines the baseline self-hosted deployment.
