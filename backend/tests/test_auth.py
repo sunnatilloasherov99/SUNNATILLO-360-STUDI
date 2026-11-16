@@ -275,6 +275,20 @@ def test_local_ai_is_opt_in_and_requires_authentication(client: TestClient) -> N
     assert capabilities.json()["providers"][0]["configured"] is False
     assert capabilities.json()["media_analysis"]["video_keyframes"] is True
     assert capabilities.json()["media_analysis"]["video_frame_count"] == 3
+    assert capabilities.json()["panorama_inpainting"]["enabled"] is False
+    assert capabilities.json()["panorama_inpainting"]["requires_user_confirmation"] is True
+
+    unauthenticated_inpaint = client.post("/api/ai/inpaint")
+    assert unauthenticated_inpaint.status_code == 401
+    unavailable_inpaint = client.post(
+        "/api/ai/inpaint",
+        headers=bearer(token),
+        files={
+            "image": ("source.png", b"not-read-without-provider", "image/png"),
+            "mask": ("mask.png", b"not-read-without-provider", "image/png"),
+        },
+    )
+    assert unavailable_inpaint.status_code == 503
 
     unavailable = client.post(
         "/api/ai/assist",
