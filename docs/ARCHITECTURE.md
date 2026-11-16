@@ -18,7 +18,8 @@
 - Account registration, login and current-user endpoints use signed, expiring JWT bearer tokens.
 - Project and media endpoints require authentication and enforce project ownership; media files are not publicly readable.
 - Passwords are stored as salted PBKDF2-HMAC-SHA256 hashes, never in plaintext.
-- Set a unique, random `JWT_SECRET` (at least 32 characters) before deployment; the development fallback is not suitable for production.
+- Set a unique, random `JWT_SECRET` (at least 32 characters) before deployment; production startup rejects the development fallback or a shorter secret.
+- Before public launch, add rate limiting/abuse protection, email verification and password reset, HTTPS, and Alembic migrations.
 
 ## Persistence
 - Projects and media metadata are stored through SQLAlchemy; PostgreSQL is the Docker default and SQLite is available for local development.
