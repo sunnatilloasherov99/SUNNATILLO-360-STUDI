@@ -24,6 +24,7 @@ An independent, portable web platform for professional 360° media workflows and
 - Build private multi-scene virtual tours from uploaded panoramas, reorder scenes and connect them with clickable in-view hotspots.
 - Run project quality checks for image integrity, 2:1 panorama ratio, recommended resolution and broken tour links.
 - Download an authenticated ZIP archive containing project metadata, tour configuration, edit settings and original media.
+- Optional local Ollama AI specialists for panorama advice, tour planning, scene descriptions and stitching guidance; no paid AI key is required.
 - FastAPI health and capability endpoints.
 - Server-side project create/list/delete API backed by SQLAlchemy and PostgreSQL (SQLite is available for local development).
 - Persistent JPEG/PNG/WebP media upload, listing and file delivery endpoints with a configurable upload limit.
