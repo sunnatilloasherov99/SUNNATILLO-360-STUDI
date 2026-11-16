@@ -35,7 +35,7 @@ An independent, portable web platform for professional 360° media workflows and
 ### Not implemented yet
 - Production hardening still required before public launch: Alembic migrations, rate limiting/abuse protection, email verification/password reset, HTTPS and production secrets.
 - Full timeline editor, video processing, color grading, audio and keyframes.
-- AI provider adapters and consent-based shared project context.
+- Cloud AI provider adapters, multimodal image/video analysis and consent-based project-file context.
 - Advanced seam/stitching defect detection and automatic stitching repair.
 - Standalone hosted tour publishing and public tour sharing.
 - Google Street View publishing OAuth/upload workflow.
