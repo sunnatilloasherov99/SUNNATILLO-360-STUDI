@@ -26,6 +26,7 @@ An independent, portable web platform for professional 360° media workflows and
 - Run project quality checks for image integrity, 2:1 panorama ratio, recommended resolution and broken tour links.
 - Download an authenticated ZIP archive containing project metadata, tour configuration, edit settings and original media.
 - Manual PostgreSQL and media-volume backup/restore scripts with SHA-256 checksums.
+- Redis-backed request rate limits for registration, login and AI requests.
 - Optional local Ollama AI specialists for panorama advice, tour planning, scene descriptions and stitching guidance; no paid AI key is required.
 - FastAPI health and capability endpoints.
 - Server-side project create/list/delete API backed by SQLAlchemy and PostgreSQL (SQLite is available for local development).
@@ -35,7 +36,7 @@ An independent, portable web platform for professional 360° media workflows and
 - GitHub Actions frontend build, backend API tests, fresh/legacy database migration checks, backup script syntax and Docker Compose validation.
 
 ### Not implemented yet
-- Production hardening still required before public launch: rate limiting/abuse protection, email verification/password reset, HTTPS and production secrets.
+- Production hardening still required before public launch: email verification/password reset, HTTPS, production secrets and additional abuse monitoring.
 - Full timeline editor, video processing, color grading, audio and keyframes.
 - Cloud AI provider adapters, multimodal image/video analysis and consent-based project-file context.
 - Advanced seam/stitching defect detection and automatic stitching repair.
