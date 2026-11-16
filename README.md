@@ -28,7 +28,9 @@ An independent, portable web platform for professional 360° media workflows and
 - GitHub Actions frontend build and backend syntax checks.
 
 ### Not implemented yet
-- User registration/login, signed expiring access tokens, password hashing and per-user project/media access control.
+- Production hardening still required before public launch: Alembic migrations, rate limiting/abuse protection, email verification/password reset, HTTPS and deployment secrets.
+- Email registration/login, signed expiring access tokens, salted password hashing and per-user project/media access control.
+- Private project-scoped panorama settings for non-destructive brightness, contrast and saturation adjustments.
 - Full timeline editor, video processing, color grading, audio and keyframes.
 - AI provider adapters and consent-based shared project context.
 - Stitching repair and automated quality analysis.
