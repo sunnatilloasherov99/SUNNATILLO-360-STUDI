@@ -14,7 +14,10 @@
 - AI suggestions are proposals; applying them requires explicit user approval.
 - External AI receives only the minimum selected context after explicit user consent.
 - API keys and provider credentials stay server-side, outside frontend bundles and source control.
-- **Current security limitation:** project and media API routes do not yet require authentication or enforce project ownership. Do not expose the API to the public internet until authentication, authorization, upload validation and rate limiting are implemented.
+- Account registration, login and current-user endpoints use signed, expiring JWT bearer tokens.
+- Project and media endpoints require authentication and enforce project ownership; media files are not publicly readable.
+- Passwords are stored as salted PBKDF2-HMAC-SHA256 hashes, never in plaintext.
+- Set a unique, random `JWT_SECRET` (at least 32 characters) before deployment; the development fallback is not suitable for production.
 
 ## Persistence
 - Projects and media metadata are stored through SQLAlchemy; PostgreSQL is the Docker default and SQLite is available for local development.
