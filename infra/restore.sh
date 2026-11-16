@@ -13,7 +13,7 @@ MEDIA_FILE="$(realpath "$2")"
 
 [[ -f "$DB_FILE" && -f "$MEDIA_FILE" ]] || { echo "Backup file not found." >&2; exit 2; }
 DB_NAME="$(basename "$DB_FILE")"
-if [[ "$DB_NAME" =~ ^studio-db-(.+)\\.dump$ ]]; then
+if [[ "$DB_NAME" =~ ^studio-db-(.+)\.dump$ ]]; then
   STAMP="${BASH_REMATCH[1]}"
   CHECKSUM_FILE="$(dirname "$DB_FILE")/studio-$STAMP.sha256"
   [[ -f "$CHECKSUM_FILE" ]] || { echo "Matching SHA-256 file not found: $CHECKSUM_FILE" >&2; exit 2; }
