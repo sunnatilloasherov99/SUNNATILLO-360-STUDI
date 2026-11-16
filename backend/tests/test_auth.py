@@ -336,3 +336,40 @@ def test_auth_responses_are_not_cached(client: TestClient) -> None:
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store"
     assert response.headers["pragma"] == "no-cache"
+
+
+def test_quality_report_includes_heuristic_vertical_discontinuity_candidates(client: TestClient) -> None:
+    token = register(client, "panorama-diagnostics@example.com")
+    project = client.post(
+        "/api/projects",
+        headers=bearer(token),
+        json={"name": "Panorama diagnostics", "mode": "manual"},
+    )
+    assert project.status_code == 201
+    project_id = project.json()["id"]
+
+    panorama = Image.new("RGB", (200, 100), (100, 100, 100))
+    from PIL import ImageDraw
+
+    ImageDraw.Draw(panorama).rectangle((99, 0, 101, 99), fill=(255, 255, 255))
+    buffer = BytesIO()
+    panorama.save(buffer, format="PNG")
+    uploaded = client.post(
+        f"/api/projects/{project_id}/media",
+        headers=bearer(token),
+        files={"file": ("synthetic-panorama.png", buffer.getvalue(), "image/png")},
+    )
+    assert uploaded.status_code == 201, uploaded.text
+
+    quality = client.get(
+        f"/api/projects/{project_id}/quality",
+        headers=bearer(token),
+    )
+    assert quality.status_code == 200, quality.text
+    diagnostic = next(
+        check for check in quality.json()["checks"]
+        if check["code"] == "vertical_discontinuity_candidates"
+    )
+    assert diagnostic["params"]["confidence"] == "low"
+    assert diagnostic["params"]["interpretation"] == "heuristic_candidates_not_confirmed_stitching_defects"
+    assert diagnostic["params"]["candidates"]
