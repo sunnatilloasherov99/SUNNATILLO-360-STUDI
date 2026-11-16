@@ -54,7 +54,9 @@ export default function AIStudio({token,language,projectId,onBack}:Props){
  const [error,setError]=useState("");
  const [busy,setBusy]=useState(false);
  const [configured,setConfigured]=useState(false);
- const [model,setModel]=useState("llama3.2");\n const [assets,setAssets]=useState<Asset[]>([]);\n const [mediaId,setMediaId]=useState("");
+ const [model,setModel]=useState("llama3.2");
+ const [assets,setAssets]=useState<Asset[]>([]);
+ const [mediaId,setMediaId]=useState("");
  useEffect(()=>{
   let cancelled=false;
   fetch("/api/ai/capabilities",{headers:{Authorization:`Bearer ${token}`}})
