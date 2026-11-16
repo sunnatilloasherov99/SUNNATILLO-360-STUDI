@@ -68,6 +68,8 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
   const [working, setWorking] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [hasMask, setHasMask] = useState(false);
+  const [configured, setConfigured] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -91,7 +93,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     });
     setMessage("");
     return () => { active = false; };
-  }, [imageUrl, t.unavailable]);
+  }, [imageUrl, token, t.unavailable]);
 
   useEffect(() => () => {
     if (resultUrl) URL.revokeObjectURL(resultUrl);
@@ -112,7 +114,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     const context = canvas.getContext("2d");
     if (!context) return;
     const p = point(event);
-    context.fillStyle = "#ffffff";
+    setHasMask(true);\n    context.fillStyle = "#ffffff";
     context.beginPath();
     context.arc(p.x, p.y, brush * Math.max(1, canvas.width / 1600), 0, Math.PI * 2);
     context.fill();
@@ -173,7 +175,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
         canvas?.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
         setMessage("");
       }}>{t.clear}</button>
-      <button className="primary" type="button" disabled={working || !dimensions.width} onClick={() => void generate()}>{working ? t.working : t.generate}</button>
+      <button className="primary" type="button" disabled={working || !dimensions.width || !configured} onClick={() => void generate()}>{working ? t.working : t.generate}</button>
     </div>
     <div className="inpainting-canvas-wrap" style={{ aspectRatio: dimensions.width && dimensions.height ? dimensions.width + "/" + dimensions.height : "2 / 1" }}>
       <img src={imageUrl} alt={t.before} />
