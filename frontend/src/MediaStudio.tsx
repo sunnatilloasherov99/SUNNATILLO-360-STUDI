@@ -24,7 +24,8 @@ export default function MediaStudio({ token, language, projectId, projectName, p
  useEffect(()=>()=>{if(url?.startsWith("blob:"))URL.revokeObjectURL(url);},[url]);
  useEffect(()=>{
   let cancelled=false;let generatedUrl:string|null=null;
-  if(!url||settings.seamOffset===0){setPreviewUrl(null);return;}
+  setPreviewUrl(null);
+  if(!url||settings.seamOffset===0)return;
   const image=new Image();
   image.onload=()=>{
    const canvas=document.createElement("canvas");canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
