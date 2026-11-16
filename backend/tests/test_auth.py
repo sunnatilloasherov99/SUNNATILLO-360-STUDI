@@ -393,6 +393,7 @@ def test_local_inpainting_uses_configured_provider_and_returns_valid_image(clien
     import httpx
     import app.main as main_module
 
+    client.headers.update({"X-Real-IP": "198.51.100.88"})
     token = register(client, "inpaint-success@example.com")
     source = Image.new("RGB", (20, 10), (120, 130, 140))
     source_buffer = BytesIO()
