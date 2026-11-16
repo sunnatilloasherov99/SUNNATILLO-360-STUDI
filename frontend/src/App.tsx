@@ -6,6 +6,10 @@ import MediaStudio from "./MediaStudio";
 
 type Mode = "ai" | "manual" | "collab";
 type Project = { id: string; name: string; mode: Mode; updatedAt: string };
+function readProjects(): Project[] {
+  try { const value: unknown = JSON.parse(localStorage.getItem("s360-projects") || "[]"); return Array.isArray(value) ? value.filter((item): item is Project => !!item && typeof item.id === "string" && typeof item.name === "string" && ["ai", "manual", "collab"].includes(item.mode) && typeof item.updatedAt === "string") : []; }
+  catch { return []; }
+}
 const modeIcons = { ai: WandSparkles, manual: SlidersHorizontal, collab: Bot };
 const modeKeys: { id: Mode; title: "aiMode" | "manualMode" | "collabMode"; description: "aiModeDesc" | "manualModeDesc" | "collabModeDesc" }[] = [
   { id: "ai", title: "aiMode", description: "aiModeDesc" },
@@ -20,7 +24,7 @@ export default function App() {
   const [mode, setMode] = useState<Mode>("manual");
   const [showCreate, setShowCreate] = useState(false);
   const [projectName, setProjectName] = useState("");
-  const [projects, setProjects] = useState<Project[]>(() => JSON.parse(localStorage.getItem("s360-projects") || "[]"));
+  const [projects, setProjects] = useState<Project[]>(readProjects);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [showMedia, setShowMedia] = useState(false);
   const t = (key: Parameters<typeof translate>[1]) => translate(language, key);
