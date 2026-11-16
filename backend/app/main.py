@@ -32,8 +32,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-if settings.environment.lower() == "production" and settings.jwt_secret == "CHANGE-ME-IN-PRODUCTION":
-    raise RuntimeError("Set a unique JWT_SECRET before running in production.")
+if settings.environment.lower() == "production" and (settings.jwt_secret == "CHANGE-ME-IN-PRODUCTION" or len(settings.jwt_secret) < 32):
+    raise RuntimeError("Set a unique JWT_SECRET of at least 32 characters before running in production.")
 storage_dir = Path(settings.media_storage_path).resolve()
 storage_dir.mkdir(parents=True, exist_ok=True)
 
@@ -97,7 +97,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
