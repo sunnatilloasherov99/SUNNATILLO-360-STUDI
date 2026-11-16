@@ -58,7 +58,7 @@ export default function AIStudio({token,language,onBack}:Props){
   let cancelled=false;
   fetch("/api/ai/capabilities",{headers:{Authorization:`Bearer ${token}`}})
    .then(r=>r.ok?r.json():Promise.reject())
-   .then(data=>{if(!cancelled){const provider=data.providers?.find((item:{id:string})=>item.id==="ollama");setConfigured(!!provider?.configured);if(provider?.model)setModel(provider.model);}})
+   .then(data=>{if(!cancelled){const provider=data.providers?.find((item:{id:string;configured?:boolean;model?:string})=>item.id==="ollama");setConfigured(!!provider?.configured);if(provider?.model)setModel(provider.model);}})
    .catch(()=>{if(!cancelled)setConfigured(false);});
   return()=>{cancelled=true;};
  },[token]);
