@@ -2,6 +2,8 @@
 
 An independent, portable web platform for professional 360° media workflows and virtual-tour production.
 
+> **Yagona yakunlash rejasi:** [docs/MASTER_COMPLETION_PLAN.md](docs/MASTER_COMPLETION_PLAN.md) — 9 bosqich, qabul mezonlari, testlar va reliz holati shu hujjatda jamlanadi.
+
 ## Product principles
 - Web-first now; desktop application later, reusing the same domain and project formats.
 - Self-hostable and portable between hosting providers and domains.
