@@ -1,5 +1,7 @@
 from collections.abc import Generator
 from pathlib import Path
+from io import BytesIO
+from zipfile import ZipFile
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -168,3 +170,21 @@ def test_tour_is_private_and_references_owned_media(client: TestClient) -> None:
         json=invalid_tour,
     )
     assert invalid_save.status_code == 422
+
+    exported = client.get(
+        f"/api/projects/{project_id}/export",
+        headers=bearer(owner_token),
+    )
+    assert exported.status_code == 200
+    assert exported.headers["content-type"] == "application/zip"
+    with ZipFile(BytesIO(exported.content)) as archive:
+        names = archive.namelist()
+        assert "project.json" in names
+        assert "tour.json" in names
+        assert any(name.startswith("media/") for name in names)
+
+    private_export = client.get(
+        f"/api/projects/{project_id}/export",
+        headers=bearer(other_token),
+    )
+    assert private_export.status_code == 404
