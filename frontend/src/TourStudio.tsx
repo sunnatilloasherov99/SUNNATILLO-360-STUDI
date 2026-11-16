@@ -91,7 +91,10 @@ export default function TourStudio({ token, language, projectId, projectName, on
  const [saving,setSaving]=useState(false);
  const [exporting,setExporting]=useState(false);
  const [checking,setChecking]=useState(false);
- const [quality,setQuality]=useState<QualityReport|null>(null);\n const [shareEnabled,setShareEnabled]=useState(false);\n const [shareUrl,setShareUrl]=useState("");\n const [shareBusy,setShareBusy]=useState(false);
+ const [quality,setQuality]=useState<QualityReport|null>(null);
+ const [shareEnabled,setShareEnabled]=useState(false);
+ const [shareUrl,setShareUrl]=useState("");
+ const [shareBusy,setShareBusy]=useState(false);
  const [error,setError]=useState("");
  const [message,setMessage]=useState("");
  const activeScene=useMemo(()=>tour.scenes.find(scene=>scene.id===activeSceneId)??tour.scenes[0]??null,[tour.scenes,activeSceneId]);
