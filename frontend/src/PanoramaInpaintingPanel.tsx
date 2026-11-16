@@ -74,6 +74,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
 
   useEffect(() => {
     let active = true;
+    requestVersion.current += 1;
     const image = new Image();
     image.onload = () => {
       if (!active) return;
@@ -138,12 +139,15 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     if (!canvas || working) return;
     if (!hasMask) { setMessage(t.noMask); return; }
     if (!window.confirm(t.confirm)) return;
+    const requestId = requestVersion.current;
+    const requestedImageUrl = imageUrl;
     setWorking(true);
     setMessage("");
     try {
-      const sourceResponse = await fetch(imageUrl);
+      const sourceResponse = await fetch(requestedImageUrl);
       if (!sourceResponse.ok) throw new Error("Source image unavailable");
       const sourceBlob = await sourceResponse.blob();
+      if (requestId !== requestVersion.current) return;
 
       // Providers expect a conventional binary mask: black outside the repair
       // area and white inside it. The visible drawing canvas is transparent
@@ -170,6 +174,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
       });
       if (!response.ok) throw new Error("Inpainting service unavailable");
       const output = await response.blob();
+      if (requestId !== requestVersion.current) return;
       if (!["image/jpeg", "image/png", "image/webp"].includes(output.type)) throw new Error("Invalid AI image response");
       const nextUrl = URL.createObjectURL(output);
       setResultUrl(current => {
@@ -177,9 +182,9 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
         return nextUrl;
       });
     } catch {
-      setMessage(t.unavailable);
+      if (requestId === requestVersion.current) setMessage(t.unavailable);
     } finally {
-      setWorking(false);
+      if (requestId === requestVersion.current) setWorking(false);
     }
   }
 
