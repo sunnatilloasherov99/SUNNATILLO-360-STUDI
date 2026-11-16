@@ -49,4 +49,4 @@
 24. Editable project delivery, exports and backup.
 
 ## Current status
-Implemented foundation: multilingual web shell, email account registration/login, JWT-protected project and media ownership, persistent panorama upload/listing, 360° panorama viewer, non-destructive image adjustments, edited-image export, multi-scene virtual tour builder with clickable hotspots, authenticated quality reports and ZIP project export. Remaining: full timeline/video editing, AI adapters, official publishing integrations, advanced seam repair, automated backups and desktop packaging.
+Implemented foundation: multilingual web shell, email account registration/login, JWT-protected project and media ownership, persistent panorama upload/listing, 360° panorama viewer, non-destructive image adjustments, edited-image export, multi-scene virtual tour builder with clickable hotspots, authenticated quality reports and ZIP project export. Remaining: full timeline/video editing, cloud and multimodal AI adapters, official publishing integrations, advanced seam repair, automated backups and desktop packaging.
