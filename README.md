@@ -60,4 +60,4 @@ The current panorama viewer is a first editing milestone, not a complete profess
 See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Deployment
-Docker Compose is the baseline self-hosting path. Configure secrets and public URLs through environment variables; never commit real credentials.
+Docker Compose is the baseline self-hosting path. Configure secrets and public URLs through environment variables; never commit real credentials. The optional `production` profile adds Caddy automatic HTTPS: point your domain to the VPS, set `DOMAIN` and `FRONTEND_ORIGIN` in `infra/.env`, open TCP 80/443, then run `docker compose --profile production --env-file .env -f docker-compose.yml up -d --build` from `infra/`. The API, database and Redis remain private; only Caddy is publicly exposed.
