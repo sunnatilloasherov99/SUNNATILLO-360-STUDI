@@ -18,7 +18,7 @@ const copy = {
   scenes:"Tur sahnalari", noScenes:"Hali sahna qo‘shilmagan", sceneTitle:"Sahna nomi", sceneDesc:"Sahna tavsifi",
   up:"Yuqoriga", down:"Pastga", remove:"O‘chirish", hotspots:"Interaktiv nuqtalar", hotspotTitle:"Nuqta nomi",
   target:"O‘tish sahnasi", yaw:"Gorizontal burchak (°)", pitch:"Vertikal burchak (°)", addHotspot:"Nuqta qo‘shish",
-  save:"Turni saqlash", saving:"Saqlanmoqda…", saved:"Tur saqlandi", preview:"360° ko‘rib chiqish",
+  save:"Turni saqlash", saving:"Saqlanmoqda…", saved:"Tur saqlandi", export:"Loyihani ZIP shaklida eksport qilish", exporting:"Eksport qilinmoqda…", exported:"Loyiha ZIP fayli yuklab olindi", preview:"360° ko‘rib chiqish",
   chooseScene:"Ko‘rish uchun sahnani tanlang", needTwo:"Nuqta qo‘shish uchun kamida 2 ta sahna kerak.",
   loadError:"Turni yoki media fayllarni yuklab bo‘lmadi.", saveError:"Turni saqlab bo‘lmadi.",
   markerHelp:"Nuqtani panoramada kerakli tomonga qarab turgan paytingizda qo‘shing. Burchaklarni gradusda kiriting.",
@@ -30,7 +30,7 @@ const copy = {
   scenes:"Сцены тура", noScenes:"Сцены ещё не добавлены", sceneTitle:"Название сцены", sceneDesc:"Описание сцены",
   up:"Выше", down:"Ниже", remove:"Удалить", hotspots:"Интерактивные точки", hotspotTitle:"Название точки",
   target:"Сцена перехода", yaw:"Горизонтальный угол (°)", pitch:"Вертикальный угол (°)", addHotspot:"Добавить точку",
-  save:"Сохранить тур", saving:"Сохранение…", saved:"Тур сохранён", preview:"Просмотр 360°",
+  save:"Сохранить тур", saving:"Сохранение…", saved:"Тур сохранён", export:"Экспортировать проект в ZIP", exporting:"Экспорт…", exported:"ZIP-архив проекта скачан", preview:"Просмотр 360°",
   chooseScene:"Выберите сцену для просмотра", needTwo:"Для добавления точки нужно минимум 2 сцены.",
   loadError:"Не удалось загрузить тур или медиафайлы.", saveError:"Не удалось сохранить тур.",
   markerHelp:"Добавляйте точку, когда панорама направлена в нужную сторону. Углы вводятся в градусах.",
@@ -42,7 +42,7 @@ const copy = {
   scenes:"Tour scenes", noScenes:"No scenes added yet", sceneTitle:"Scene title", sceneDesc:"Scene description",
   up:"Move up", down:"Move down", remove:"Remove", hotspots:"Interactive hotspots", hotspotTitle:"Hotspot label",
   target:"Destination scene", yaw:"Horizontal angle (°)", pitch:"Vertical angle (°)", addHotspot:"Add hotspot",
-  save:"Save tour", saving:"Saving…", saved:"Tour saved", preview:"360° preview",
+  save:"Save tour", saving:"Saving…", saved:"Tour saved", export:"Export project as ZIP", exporting:"Exporting…", exported:"Project ZIP downloaded", preview:"360° preview",
   chooseScene:"Choose a scene to preview", needTwo:"At least 2 scenes are needed to add a hotspot.",
   loadError:"Could not load the tour or media files.", saveError:"Could not save the tour.",
   markerHelp:"Add a hotspot while the panorama is facing the desired direction. Enter angles in degrees.",
@@ -67,7 +67,7 @@ export default function TourStudio({ token, language, projectId, projectName, on
  const [pitch,setPitch]=useState("0");
  const [panoramaUrl,setPanoramaUrl]=useState<string|null>(null);
  const [loading,setLoading]=useState(true);
- const [saving,setSaving]=useState(false);
+ const [saving,setSaving]=useState(false);\n const [exporting,setExporting]=useState(false);
  const [error,setError]=useState("");
  const [message,setMessage]=useState("");
  const activeScene=useMemo(()=>tour.scenes.find(scene=>scene.id===activeSceneId)??tour.scenes[0]??null,[tour.scenes,activeSceneId]);
@@ -185,7 +185,7 @@ export default function TourStudio({ token, language, projectId, projectName, on
  }
 
  return <section className="tour-studio">
-  <div className="media-head"><div><div className="eyebrow muted">360° TOUR WORKSPACE · {projectName}</div><h2>{t.title}</h2></div><button className="secondary" onClick={onBack}>{t.back}</button></div>
+  <div className="media-head"><div><div className="eyebrow muted">360° TOUR WORKSPACE · {projectName}</div><h2>{t.title}</h2></div><div className="editor-actions"><button className="secondary" disabled={exporting||saving} onClick={()=>void exportProject()}>{exporting?t.exporting:t.export}</button><button className="secondary" onClick={onBack}>{t.back}</button></div></div>
   {loading?<div className="media-empty">…</div>:<>
    <div className="tour-meta">
     <label className="field-label">{t.tourTitle}<input value={tour.title} onChange={e=>setTour(current=>({...current,title:e.target.value}))}/></label>
