@@ -75,10 +75,12 @@ export default function VideoStudio({token,language,projectId,projectName,projec
   const container=host.current;
   const video=videoRef.current;
   if(!container||!videoUrl||!video)return;
+  const mount:HTMLDivElement=container;
+  const media:HTMLVideoElement=video;
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
-  container.appendChild(renderer.domElement);
+  mount.appendChild(renderer.domElement);
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(75,1,0.1,1200);
   const geometry=new THREE.SphereGeometry(500,64,48);
@@ -91,7 +93,7 @@ export default function VideoStudio({token,language,projectId,projectName,projec
   const canvas=renderer.domElement;
   canvas.style.width="100%";canvas.style.height="100%";canvas.style.display="block";canvas.style.cursor="grab";canvas.style.touchAction="none";
   function resize(){
-   const width=container.clientWidth||640,height=container.clientHeight||360;
+   const width=mount.clientWidth||640,height=mount.clientHeight||360;
    renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();
   }
   function down(event:PointerEvent){dragging=true;lastX=event.clientX;lastY=event.clientY;canvas.setPointerCapture(event.pointerId);canvas.style.cursor="grabbing";}
@@ -103,7 +105,7 @@ export default function VideoStudio({token,language,projectId,projectName,projec
    const phi=THREE.MathUtils.degToRad(90-latitude);
    const theta=THREE.MathUtils.degToRad(longitude);
    camera.lookAt(500*Math.sin(phi)*Math.cos(theta),500*Math.cos(phi),500*Math.sin(phi)*Math.sin(theta));
-   texture.needsUpdate=video.readyState>=2;
+   texture.needsUpdate=media.readyState>=2;
    renderer.render(scene,camera);
   }
   resize();window.addEventListener("resize",resize);
