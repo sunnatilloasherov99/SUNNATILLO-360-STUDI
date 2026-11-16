@@ -113,6 +113,12 @@ def test_projects_and_editor_settings_are_private_to_owner(client: TestClient) -
     )
     assert owner_settings.status_code == 200
     assert owner_settings.json()["seam_offset"] == 90
+    invalid_seam = client.put(
+        f"/api/projects/{project_id}/editor-settings",
+        headers=bearer(owner_token),
+        json={"brightness": 1, "contrast": 1, "saturation": 1, "seam_offset": 360},
+    )
+    assert invalid_seam.status_code == 422
 
     other_settings = client.get(
         f"/api/projects/{project_id}/editor-settings",
