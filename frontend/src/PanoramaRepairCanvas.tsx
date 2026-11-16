@@ -30,7 +30,7 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
   sourceRef.current=null;undoRef.current=[];redoRef.current=[];setSourceMode(false);setSourceLabel(t.noSource);setUndoCount(0);setRedoCount(0);setNotice("");
   const canvas=patchCanvasRef.current;const image=imageRef.current;
   if(canvas&&image&&image.complete&&image.naturalWidth){canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;canvas.getContext("2d")?.clearRect(0,0,canvas.width,canvas.height);}
- },[imageUrl,patchCanvasRef,t.noSource]);
+ },[imageUrl]);
 
  function snapshot(){
   const canvas=patchCanvasRef.current;const context=canvas?.getContext("2d");
