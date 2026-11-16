@@ -123,3 +123,5 @@
 .public-tour-scenes button span{font-size:11px;opacity:.55}.public-tour-footer{text-align:center;margin-top:48px;font-size:11px;letter-spacing:.04em;opacity:.45}
 .public-tour-state{display:grid;place-items:center;min-height:55vh;padding:24px;text-align:center;opacity:.8}
 @media(max-width:600px){.public-tour-content{width:calc(100% - 24px);padding-top:22px}.public-tour-viewer{height:52vh;min-height:260px}.public-tour-header{padding:14px 16px}}
+
+.workspace-loading{display:grid;place-items:center;min-height:220px;padding:24px;color:#9db0cc;font-size:13px;letter-spacing:.04em}
