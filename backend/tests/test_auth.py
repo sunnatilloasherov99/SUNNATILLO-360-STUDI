@@ -46,7 +46,7 @@ def register(client: TestClient, email: str) -> str:
         "/api/auth/register",
         json={"email": email, "password": "SafePass-12345"},
     )
-    assert response.status_code == 201
+    assert response.status_code == 201, response.text
     return response.json()["access_token"]
 
 
