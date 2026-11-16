@@ -34,7 +34,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] Sifat hisobotiga diagnostika natijasini ulash.
 - [x] GitHub Actions tekshiruvlari: run 43916242412 muvaffaqiyatli.
 - [ ] Haqiqiy telefon panoramalari bilan vizual tekshirish.
-- [ ] API javobining integratsion testini qo'shish.
+- [x] API javobining integratsion testi qo'shildi (`test_quality_report_includes_heuristic_vertical_discontinuity_candidates`).
 
 ### 5.2 Qo'lda tuzatish
 - [ ] Brauzerda nuqson maydonini belgilash (mask/brush).
