@@ -34,7 +34,7 @@ An independent, portable web platform for professional 360° media workflows and
 - GitHub Actions frontend build and backend syntax checks.
 
 ### Not implemented yet
-- Production hardening still required before public launch: Alembic migrations, rate limiting/abuse protection, email verification/password reset, HTTPS and production secrets.
+- Production hardening still required before public launch: rate limiting/abuse protection, email verification/password reset, HTTPS and production secrets.
 - Full timeline editor, video processing, color grading, audio and keyframes.
 - Cloud AI provider adapters, multimodal image/video analysis and consent-based project-file context.
 - Advanced seam/stitching defect detection and automatic stitching repair.
