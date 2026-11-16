@@ -218,6 +218,38 @@ def test_public_tour_link_can_be_revoked(client: TestClient) -> None:
 
 
 
+
+def test_ai_video_analysis_requires_ffmpeg_and_respects_project_ownership(client: TestClient, monkeypatch) -> None:
+    owner_token = register(client, "ai-video-owner@example.com")
+    other_token = register(client, "ai-video-other@example.com")
+    project_id = create_project(client, owner_token)
+    uploaded = client.post(
+        f"/api/projects/{project_id}/media",
+        headers={"Authorization": f"Bearer {owner_token}"},
+        files={"file": ("walkthrough.mp4", b"\x00\x00\x00\x18ftypisom\x00\x00\x02\x00isomiso2", "video/mp4")},
+    )
+    assert uploaded.status_code == 201, uploaded.text
+    media_id = uploaded.json()["id"]
+    payload = {"role": "panorama_quality", "prompt": "Review this 360 video", "media_id": media_id}
+
+    private = client.post(
+        "/api/ai/assist",
+        headers={"Authorization": f"Bearer {other_token}"},
+        json=payload,
+    )
+    assert private.status_code == 404
+
+    monkeypatch.setattr(main.shutil, "which", lambda _name: None)
+    unavailable = client.post(
+        "/api/ai/assist",
+        headers={"Authorization": f"Bearer {owner_token}"},
+        json=payload,
+    )
+    assert unavailable.status_code == 503
+    assert "FFmpeg" in unavailable.json()["detail"]
+
+
+
 def test_video_export_is_private_and_requires_ffmpeg(client: TestClient, monkeypatch) -> None:
     owner_token = register(client, "video-export-owner@example.com")
     other_token = register(client, "video-export-other@example.com")
