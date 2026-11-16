@@ -158,7 +158,7 @@
 .inpainting-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .inpainting-controls label{display:flex;align-items:center;gap:9px;font-size:12px}
 .inpainting-controls input{width:140px;accent-color:var(--accent,#8b9cff)}
-.inpainting-canvas-wrap{position:relative;width:100%;max-height:560px;overflow:hidden;border-radius:10px;background:#080d16}
+.inpainting-canvas-wrap{position:relative;width:100%;overflow:hidden;border-radius:10px;background:#080d16}
 .inpainting-canvas-wrap img{display:block;width:100%;height:100%;object-fit:contain}
 .inpainting-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;opacity:.48}
 .inpainting-preview{display:grid;grid-template-columns:1fr 1fr;gap:12px}
