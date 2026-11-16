@@ -14,19 +14,19 @@ const copy = {
 export default function MediaStudio({ language, projectId, projectName, projects, onBack, onSelectProject, onRefreshProjects }: Props) {
  const t=copy[language]; const host=useRef<HTMLDivElement>(null);
  const [url,setUrl]=useState<string|null>(null); const [meta,setMeta]=useState<{width:number;height:number;name:string}|null>(null);
- const [assets,setAssets]=useState<Asset[]>([]); const [error,setError]=useState(""); const [uploading,setUploading]=useState(false);
+ const [assets,setAssets]=useState<Asset[]>([]); const [error,setError]=useState(""); const [uploading,setUploading]=useState(false); const [saved,setSaved]=useState(false);
  async function loadAssets(id:string){try{const r=await fetch(`/api/projects/${id}/media`);if(!r.ok)throw new Error();setAssets(await r.json());setError("");}catch{setError(t.failed);}}
  useEffect(()=>{setUrl(null);setMeta(null);setAssets([]);if(projectId)void loadAssets(projectId);},[projectId]);
  useEffect(()=>{if(!url||!host.current)return;const viewer=new Viewer({container:host.current,panorama:url,navbar:["zoom","move","fullscreen"]});return()=>viewer.destroy();},[url]);
- function showAsset(asset:Asset){const image=new Image();const fileUrl=asset.url;image.onload=()=>{setMeta({width:image.naturalWidth,height:image.naturalHeight,name:asset.name});setUrl(fileUrl);setError("");};image.onerror=()=>setError(t.readError);image.src=fileUrl;}
+ function showAsset(asset:Asset){const image=new Image();const fileUrl=asset.url;image.onload=()=>{setMeta({width:image.naturalWidth,height:image.naturalHeight,name:asset.name});setUrl(fileUrl);setSaved(true);setError("");};image.onerror=()=>setError(t.readError);image.src=fileUrl;}
  async function choose(file?:File){
   if(!file)return;
   if(!["image/jpeg","image/png","image/webp"].includes(file.type)){setError(t.invalid);return;}
   if(!projectId){setError(t.chooseProject);return;}
   const localUrl=URL.createObjectURL(file);const image=new Image();
   image.onload=async()=>{
-   setMeta({width:image.naturalWidth,height:image.naturalHeight,name:file.name});setUrl(localUrl);setUploading(true);setError("");
-   try{const body=new FormData();body.append("file",file);const response=await fetch(`/api/projects/${projectId}/media`,{method:"POST",body});if(!response.ok)throw new Error();const asset:Asset=await response.json();URL.revokeObjectURL(localUrl);setAssets(current=>[asset,...current.filter(a=>a.id!==asset.id)]);setUrl(asset.url);setMeta({width:image.naturalWidth,height:image.naturalHeight,name:asset.name});}
+   setMeta({width:image.naturalWidth,height:image.naturalHeight,name:file.name});setUrl(localUrl);setSaved(false);setUploading(true);setError("");
+   try{const body=new FormData();body.append("file",file);const response=await fetch(`/api/projects/${projectId}/media`,{method:"POST",body});if(!response.ok)throw new Error();const asset:Asset=await response.json();URL.revokeObjectURL(localUrl);setAssets(current=>[asset,...current.filter(a=>a.id!==asset.id)]);setUrl(asset.url);setMeta({width:image.naturalWidth,height:image.naturalHeight,name:asset.name});setSaved(true);}
    catch{setError(t.failed);}
    finally{setUploading(false);}
   };
@@ -40,7 +40,7 @@ export default function MediaStudio({ language, projectId, projectName, projects
    <div className="media-toolbar"><label className="primary upload-button">＋ {url?t.replace:t.import}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>choose(e.target.files?.[0])}/></label><span>{t.hint}</span></div>
    <div className="media-upload-note">{uploading?t.uploading:t.uploadHint}</div>
    {error&&<div className="media-alert">{error}</div>}
-   {url&&meta?<><div className="panorama-viewer" ref={host}/><div className="media-report"><div><span>{t.resolution}</span><strong>{meta.width} × {meta.height}</strong></div><div><span>{t.ratio}</span><strong>{(meta.width/meta.height).toFixed(2)}:1</strong></div><div><span>{t.status}</span><strong className={valid?"good":"warning"}>{valid?t.pass:t.warn}</strong></div></div>{meta.width<4000&&<p className="media-warning">{t.low}</p>}<p className="media-success">✓ {t.ready} <span>· {meta.name}</span></p></>:<div className="media-empty"><div>360°</div><strong>{t.empty}</strong><span>{t.hint}</span></div>}
+   {url&&meta?<><div className="panorama-viewer" ref={host}/><div className="media-report"><div><span>{t.resolution}</span><strong>{meta.width} × {meta.height}</strong></div><div><span>{t.ratio}</span><strong>{(meta.width/meta.height).toFixed(2)}:1</strong></div><div><span>{t.status}</span><strong className={valid?"good":"warning"}>{valid?t.pass:t.warn}</strong></div></div>{meta.width<4000&&<p className="media-warning">{t.low}</p>}{saved&&<p className="media-success">✓ {t.ready} <span>· {meta.name}</span></p>}{!saved&&!uploading&&<p className="media-warning">{language==="uz"?"Hozircha faqat ko‘rish uchun ochildi, serverga saqlanmadi.":language==="ru"?"Пока открыто только для просмотра и не сохранено на сервере.":"Preview only; this file has not been saved to the server."}</p>}</>:<div className="media-empty"><div>360°</div><strong>{t.empty}</strong><span>{t.hint}</span></div>}
    <div className="saved-media"><h3>{t.files}</h3>{assets.length===0?<p>{t.noFiles}</p>:<div className="saved-media-list">{assets.map(asset=><button key={asset.id} className="saved-media-item" onClick={()=>showAsset(asset)}><span>360°</span><strong>{asset.name}</strong><small>{(asset.sizeBytes/1024/1024).toFixed(1)} MB · {t.saved}</small></button>)}</div>}</div>
   </>}
  </section>;
