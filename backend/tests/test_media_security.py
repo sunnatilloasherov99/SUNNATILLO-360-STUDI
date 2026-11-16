@@ -136,6 +136,43 @@ def upload_png(client: TestClient, token: str, project_id: str) -> str:
     return response.json()["id"]
 
 
+def test_quality_report_estimates_seam_continuity_and_is_private(client: TestClient) -> None:
+    owner_token = register(client, "seam-quality-owner@example.com")
+    other_token = register(client, "seam-quality-other@example.com")
+    project_id = create_project(client, owner_token)
+    headers = {"Authorization": f"Bearer {owner_token}"}
+
+    image = Image.new("RGB", (32, 16), color=(120, 120, 120))
+    pixels = image.load()
+    for y in range(image.height):
+        pixels[0, y] = (0, 0, 0)
+        pixels[image.width - 1, y] = (255, 255, 255)
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+    uploaded = client.post(
+        f"/api/projects/{project_id}/media",
+        headers=headers,
+        files={"file": ("seam-defect.png", buffer.getvalue(), "image/png")},
+    )
+    assert uploaded.status_code == 201, uploaded.text
+
+    quality_url = f"/api/projects/{project_id}/quality"
+    assert client.get(
+        quality_url,
+        headers={"Authorization": f"Bearer {other_token}"},
+    ).status_code == 404
+
+    report = client.get(quality_url, headers=headers)
+    assert report.status_code == 200, report.text
+    seam_check = next(
+        check for check in report.json()["checks"]
+        if check["code"] == "seam_continuity"
+    )
+    assert seam_check["status"] == "warning"
+    assert seam_check["params"]["level"] == "high"
+    assert seam_check["params"]["score"] >= 45
+
+
 def test_tour_rejects_hotspots_that_point_to_unknown_scenes(client: TestClient) -> None:
     token = register(client, "tour-validation@example.com")
     project_id = create_project(client, token)
