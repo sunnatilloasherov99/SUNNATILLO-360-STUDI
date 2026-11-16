@@ -7,6 +7,7 @@ import secrets
 import json
 from io import BytesIO
 from zipfile import ZIP_DEFLATED, ZipFile
+from PIL import Image, UnidentifiedImageError
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Generator
@@ -349,6 +350,69 @@ def save_project_tour(project_id: str, payload: TourPayload, user: User = Depend
     project.updated_at = now_utc()
     db.commit()
     return payload.model_dump()
+
+
+@app.get("/api/projects/{project_id}/quality")
+def check_project_quality(project_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    assets = db.scalars(select(MediaAsset).where(MediaAsset.project_id == project_id)).all()
+    checks = []
+    valid_media_ids = set()
+    for asset in assets:
+        path = storage_dir / asset.stored_name
+        if not path.is_file():
+            checks.append({"id": f"media-{asset.id}-file", "status": "fail", "message": f"Missing original file: {asset.original_name}"})
+            continue
+        try:
+            with Image.open(path) as image:
+                width, height = image.size
+                image.verify()
+            with Image.open(path) as image:
+                image_format = image.format
+            valid_media_ids.add(asset.id)
+        except (UnidentifiedImageError, OSError, ValueError):
+            checks.append({"id": f"media-{asset.id}-decode", "status": "fail", "message": f"Image cannot be decoded: {asset.original_name}"})
+            continue
+        checks.append({
+            "id": f"media-{asset.id}-ratio",
+            "status": "pass" if abs(width / height - 2) < 0.02 else "warning",
+            "message": f"{asset.original_name}: {width}×{height}, aspect ratio {width / height:.2f}:1",
+        })
+        checks.append({
+            "id": f"media-{asset.id}-resolution",
+            "status": "pass" if width >= 4000 else "warning",
+            "message": f"{asset.original_name}: {'recommended width met' if width >= 4000 else 'below recommended 4000 px width'}",
+        })
+        checks.append({
+            "id": f"media-{asset.id}-format",
+            "status": "pass" if image_format in {"JPEG", "PNG", "WEBP"} else "warning",
+            "message": f"{asset.original_name}: {image_format or 'unknown'}",
+        })
+    if not assets:
+        checks.append({"id": "media-present", "status": "warning", "message": "No panorama images have been uploaded yet."})
+    try:
+        tour = json.loads(project.tour_json or "{}")
+    except json.JSONDecodeError:
+        tour = {"scenes": []}
+        checks.append({"id": "tour-json", "status": "fail", "message": "Tour configuration could not be read."})
+    scenes = tour.get("scenes", []) if isinstance(tour, dict) else []
+    if not scenes:
+        checks.append({"id": "tour-scenes", "status": "warning", "message": "The virtual tour has no scenes yet."})
+    else:
+        checks.append({"id": "tour-scenes", "status": "pass", "message": f"Virtual tour contains {len(scenes)} scene(s)."})
+        scene_ids = {scene.get("id") for scene in scenes if isinstance(scene, dict)}
+        for scene in scenes:
+            if not isinstance(scene, dict):
+                continue
+            if scene.get("media_id") not in valid_media_ids:
+                checks.append({"id": f"scene-{scene.get('id', 'unknown')}-media", "status": "fail", "message": f"Scene '{scene.get('title', 'Untitled')}' has missing or invalid media."})
+            for hotspot in scene.get("hotspots", []):
+                if hotspot.get("target_scene_id") not in scene_ids:
+                    checks.append({"id": f"scene-{scene.get('id', 'unknown')}-hotspot", "status": "fail", "message": f"Scene '{scene.get('title', 'Untitled')}' has a broken hotspot link."})
+    summary = {status: sum(1 for check in checks if check["status"] == status) for status in ("pass", "warning", "fail")}
+    return {"project_id": project.id, "project_name": project.name, "summary": summary, "checks": checks}
 
 
 @app.get("/api/projects/{project_id}/export")
