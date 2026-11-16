@@ -31,6 +31,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+if settings.environment.lower() == "production" and settings.jwt_secret == "CHANGE-ME-IN-PRODUCTION":
+    raise RuntimeError("Set a unique JWT_SECRET before running in production.")
 storage_dir = Path(settings.media_storage_path).resolve()
 storage_dir.mkdir(parents=True, exist_ok=True)
 
