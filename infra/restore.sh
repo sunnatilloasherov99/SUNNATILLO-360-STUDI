@@ -29,14 +29,13 @@ read -r -p 'Type RESTORE to continue: ' CONFIRM
 [[ "$CONFIRM" == "RESTORE" ]] || { echo "Restore cancelled."; exit 1; }
 
 docker compose up -d db api
-
-echo "Restoring media files..."
-docker compose exec -T api sh -c 'rm -rf /data/media && mkdir -p /data/media && tar -xzf - -C /data' < "$MEDIA_FILE"
-
-echo "Stopping API while restoring database..."
+echo "Stopping API while restoring database and media..."
 docker compose stop api
 restart_api() { docker compose start api >/dev/null 2>&1 || true; }
 trap restart_api EXIT
+
+echo "Restoring original media files..."
+docker compose run --rm --no-deps --entrypoint sh api -c 'rm -rf /data/media && mkdir -p /data/media && tar -xzf - -C /data' < "$MEDIA_FILE"
 
 echo "Restoring PostgreSQL database..."
 docker compose exec -T db sh -c 'pg_restore --clean --if-exists --no-owner --no-acl -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < "$DB_FILE"
