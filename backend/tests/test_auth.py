@@ -319,3 +319,11 @@ def test_health_checks_database_and_media_storage(client: TestClient) -> None:
     assert response.status_code == 200
     assert response.json()["dependencies"]["database"] == "ok"
     assert response.json()["dependencies"]["media_storage"] == "ok"
+
+
+def test_auth_responses_are_not_cached(client: TestClient) -> None:
+    token = register(client, "no-cache@example.com")
+    response = client.get("/api/auth/me", headers=bearer(token))
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["pragma"] == "no-cache"
