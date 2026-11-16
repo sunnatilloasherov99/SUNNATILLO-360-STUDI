@@ -33,5 +33,12 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
+      - name: Verify database migrations
+        run: alembic upgrade head
+        env:
+          ENVIRONMENT: production
+          JWT_SECRET: ci-test-secret-not-for-deployment-0123456789
+          DATABASE_URL: sqlite:///./migration-check.db
+          MEDIA_STORAGE_PATH: ./migration-media
       - run: python -m compileall -q app
       - run: pytest -q
