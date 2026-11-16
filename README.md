@@ -29,7 +29,7 @@ An independent, portable web platform for professional 360° media workflows and
 - Manual PostgreSQL and media-volume backup/restore scripts with SHA-256 checksums.
 - Redis-backed request rate limits for registration, login and AI requests.
 - Installable Progressive Web App (PWA) shell for desktop/mobile browsers; private API data is never cached by the service worker.
-- Optional local Ollama AI specialists for panorama advice, tour planning, scene descriptions and stitching guidance; explicitly selected project images can be sent to a vision-capable local model. No paid AI key is required.
+- Optional local Ollama AI specialists for panorama advice, tour planning, scene descriptions and stitching guidance, plus a three-role parallel collaboration review; explicitly selected project images can be sent to a vision-capable local model. No paid AI key is required.
 - FastAPI health and capability endpoints.
 - Server-side project create/list/delete API backed by SQLAlchemy and PostgreSQL (SQLite is available for local development).
 - Persistent JPEG/PNG/WebP and MP4/WebM media upload, listing and file delivery endpoints with a configurable upload limit.
