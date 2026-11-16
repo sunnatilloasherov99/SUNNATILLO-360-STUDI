@@ -12,7 +12,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Generator, Literal
 
-from fastapi import FastAPI, Depends, File, HTTPException, UploadFile, Header
+from fastapi import FastAPI, Depends, File, HTTPException, UploadFile, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
@@ -21,6 +21,9 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, create_engin
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker, Session
 import jwt
 import httpx
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 
 class Settings(BaseSettings):
@@ -35,6 +38,7 @@ class Settings(BaseSettings):
     ollama_base_url: str = ""
     ollama_model: str = "llama3.2"
     ollama_timeout_seconds: int = 120
+    rate_limit_storage_uri: str = "memory://"
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
@@ -89,7 +93,10 @@ class MediaAsset(Base):
     project: Mapped[Project] = relationship(back_populates="media")
 
 
+limiter = Limiter(key_func=get_remote_address, storage_uri=settings.rate_limit_storage_uri)
 app = FastAPI(title=settings.app_name, version="0.2.0")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 origins = [item.strip() for item in settings.frontend_origin.split(",") if item.strip()]
 app.add_middleware(
     CORSMiddleware,
@@ -247,7 +254,8 @@ async def capabilities():
 
 
 @app.post("/api/auth/register", status_code=201)
-def register(payload: RegisterPayload, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def register(request: Request, response: Response, payload: RegisterPayload, db: Session = Depends(get_db)):
     email = normalize_email(payload.email)
     if "@" not in email or "." not in email.rsplit("@", 1)[-1]:
         raise HTTPException(status_code=422, detail="Email manzilini to‘g‘ri kiriting.")
@@ -261,7 +269,8 @@ def register(payload: RegisterPayload, db: Session = Depends(get_db)):
 
 
 @app.post("/api/auth/login")
-def login(payload: LoginPayload, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(request: Request, response: Response, payload: LoginPayload, db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.email == normalize_email(payload.email)))
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Email yoki parol noto‘g‘ri.")
@@ -370,7 +379,8 @@ def ai_capabilities(user: User = Depends(current_user)):
 
 
 @app.post("/api/ai/assist")
-async def ai_assist(payload: AIRequest, user: User = Depends(current_user)):
+@limiter.limit("20/minute")
+async def ai_assist(request: Request, response: Response, payload: AIRequest, user: User = Depends(current_user)):
     if not settings.ollama_base_url.strip():
         raise HTTPException(
             status_code=503,
