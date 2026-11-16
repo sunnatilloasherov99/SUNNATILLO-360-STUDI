@@ -27,7 +27,7 @@ An independent, portable web platform for professional 360° media workflows and
 - GitHub Actions frontend build and backend syntax checks.
 
 ### Not implemented yet
-- User accounts, project ownership and access control (not yet implemented).
+- User registration/login, signed expiring access tokens, password hashing and per-user project/media access control.
 - Full timeline editor, video processing, color grading, audio and keyframes.
 - AI provider adapters and consent-based shared project context.
 - Stitching repair and automated quality analysis.
