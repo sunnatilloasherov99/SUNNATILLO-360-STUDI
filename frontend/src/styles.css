@@ -108,3 +108,18 @@
 .tour-share-link{display:flex;gap:10px;min-width:0}
 .tour-share-link input{flex:1;min-width:0}
 @media(max-width:560px){.tour-share-link{flex-direction:column}}
+
+.public-tour-page{min-height:100vh;background:var(--background,#0b0d12);color:var(--foreground,#f5f6fa)}
+.public-tour-header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px clamp(18px,5vw,64px);border-bottom:1px solid var(--line,rgba(255,255,255,.1))}
+.public-tour-header>div{display:grid;gap:4px}.public-tour-header span{font-size:13px;font-weight:750;letter-spacing:.08em}.public-tour-header small{font-size:11px;opacity:.6}
+.public-tour-header a{color:inherit;text-decoration:none;font-size:13px}
+.public-tour-content{width:min(1120px,calc(100% - 36px));margin:0 auto;padding:34px 0 48px}
+.public-tour-intro{margin-bottom:24px}.public-tour-intro h1{margin:8px 0;font-size:clamp(26px,5vw,42px)}.public-tour-intro p{max-width:760px;line-height:1.65;opacity:.75}
+.public-tour-viewer{height:clamp(320px,58vw,660px);overflow:hidden;border-radius:18px;background:#05080e;border:1px solid var(--line,rgba(255,255,255,.1))}
+.public-tour-scene-info{margin:18px 0}.public-tour-scene-info h2{margin:0 0 8px}.public-tour-scene-info p{margin:0;line-height:1.6;opacity:.75}
+.public-tour-scenes{margin-top:28px}.public-tour-scenes h3{margin:0 0 12px}.public-tour-scenes>div{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}
+.public-tour-scenes button{display:flex;align-items:center;gap:10px;flex:0 0 auto;max-width:240px;padding:12px 16px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:12px;background:rgba(255,255,255,.025);color:inherit;cursor:pointer}
+.public-tour-scenes button.selected{border-color:var(--accent,#8b9cff);background:rgba(120,140,255,.1)}
+.public-tour-scenes button span{font-size:11px;opacity:.55}.public-tour-footer{text-align:center;margin-top:48px;font-size:11px;letter-spacing:.04em;opacity:.45}
+.public-tour-state{display:grid;place-items:center;min-height:55vh;padding:24px;text-align:center;opacity:.8}
+@media(max-width:600px){.public-tour-content{width:calc(100% - 24px);padding-top:22px}.public-tour-viewer{height:52vh;min-height:260px}.public-tour-header{padding:14px 16px}}
