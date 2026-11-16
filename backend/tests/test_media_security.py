@@ -164,6 +164,29 @@ def test_editor_settings_validate_and_persist_seam_blend(client: TestClient) -> 
     assert invalid.status_code == 422
 
 
+def test_quality_report_skips_seam_score_for_non_equirectangular_images(client: TestClient) -> None:
+    token = register(client, "non-equirectangular@example.com")
+    project_id = create_project(client, token)
+    image = Image.new("RGB", (12, 9), color=(80, 80, 80))
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+    uploaded = client.post(
+        f"/api/projects/{project_id}/media",
+        headers={"Authorization": f"Bearer {token}"},
+        files={"file": ("not-2-to-1.png", buffer.getvalue(), "image/png")},
+    )
+    assert uploaded.status_code == 201, uploaded.text
+
+    report = client.get(
+        f"/api/projects/{project_id}/quality",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert report.status_code == 200
+    codes = [check["code"] for check in report.json()["checks"]]
+    assert "aspect_ratio" in codes
+    assert "seam_continuity" not in codes
+
+
 def test_quality_report_estimates_seam_continuity_and_is_private(client: TestClient) -> None:
     owner_token = register(client, "seam-quality-owner@example.com")
     other_token = register(client, "seam-quality-other@example.com")
