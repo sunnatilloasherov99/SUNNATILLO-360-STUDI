@@ -273,6 +273,8 @@ def test_local_ai_is_opt_in_and_requires_authentication(client: TestClient) -> N
     assert capabilities.status_code == 200
     assert capabilities.json()["providers"][0]["id"] == "ollama"
     assert capabilities.json()["providers"][0]["configured"] is False
+    assert capabilities.json()["media_analysis"]["video_keyframes"] is True
+    assert capabilities.json()["media_analysis"]["video_frame_count"] == 3
 
     unavailable = client.post(
         "/api/ai/assist",
