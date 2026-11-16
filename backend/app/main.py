@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     ollama_base_url: str = ""
     ollama_model: str = "llama3.2"
     ollama_timeout_seconds: int = 120
+    inpainting_endpoint_url: str = ""
+    inpainting_api_key: str = ""
+    inpainting_timeout_seconds: int = 180
     rate_limit_storage_uri: str = "memory://"
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
@@ -135,6 +138,7 @@ async def enforce_request_rate_limits(request: Request, call_next):
         ("POST", "/api/auth/register"): 10,
         ("POST", "/api/auth/login"): 10,
         ("POST", "/api/ai/assist"): 20,
+        ("POST", "/api/ai/inpaint"): 5,
     }
     limit = limits.get((request.method, request.url.path))
     if request.method == "GET" and request.url.path.startswith("/api/public/tours/"):
@@ -708,11 +712,96 @@ def save_project_tour(project_id: str, payload: TourPayload, user: User = Depend
 @app.get("/api/ai/capabilities")
 def ai_capabilities(user: User = Depends(current_user)):
     return {
-        "providers": [{"id": "ollama", "name": "Ollama (local)", "configured": bool(settings.ollama_base_url), "model": settings.ollama_model}],
+        "providers": [
+            {"id": "ollama", "name": "Ollama (local)", "configured": bool(settings.ollama_base_url), "model": settings.ollama_model},
+            {"id": "inpainting_http", "name": "User-configured local inpainting endpoint", "configured": bool(settings.inpainting_endpoint_url)},
+        ],
+        "panorama_inpainting": {"enabled": bool(settings.inpainting_endpoint_url), "requires_user_confirmation": True, "max_upload_mb": 20},
         "roles": [*AI_ROLE_PROMPTS.keys(), "collaboration"],
         "media_analysis": {"images": True, "video_keyframes": True, "video_frame_count": 3, "max_video_minutes": 30},
         "external_data_sent": False,
     }
+
+
+@app.post("/api/ai/inpaint")
+async def ai_inpaint(
+    image: UploadFile = File(...),
+    mask: UploadFile = File(...),
+    prompt: str = "Repair only the masked area. Preserve the surrounding panorama and its geometry.",
+    user: User = Depends(current_user),
+):
+    # The provider URL is server configuration only; clients cannot select a URL,
+    # preventing this feature from becoming an arbitrary server-side request proxy.
+    endpoint = settings.inpainting_endpoint_url.strip()
+    if not endpoint:
+        raise HTTPException(
+            status_code=503,
+            detail="Local inpainting is not configured. Set INPAINTING_ENDPOINT_URL on your server.",
+        )
+    if len(prompt) > 2000:
+        raise HTTPException(status_code=422, detail="The inpainting prompt must be 2,000 characters or fewer.")
+    if image.content_type not in {"image/jpeg", "image/png", "image/webp"}:
+        raise HTTPException(status_code=415, detail="The source must be a JPEG, PNG, or WebP image.")
+    if mask.content_type not in {"image/png", "image/webp"}:
+        raise HTTPException(status_code=415, detail="The repair mask must be a PNG or WebP image.")
+    image_bytes = await image.read(20 * 1024 * 1024 + 1)
+    mask_bytes = await mask.read(20 * 1024 * 1024 + 1)
+    if len(image_bytes) > 20 * 1024 * 1024 or len(mask_bytes) > 20 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Source and mask must each be 20 MB or smaller.")
+    try:
+        with Image.open(BytesIO(image_bytes)) as source_image:
+            source_image.verify()
+        with Image.open(BytesIO(image_bytes)) as source_image:
+            source_size = source_image.size
+            if source_image.width * source_image.height > 40_000_000:
+                raise HTTPException(status_code=413, detail="The source image exceeds the 40-megapixel limit.")
+        with Image.open(BytesIO(mask_bytes)) as mask_image:
+            mask_image.verify()
+        with Image.open(BytesIO(mask_bytes)) as mask_image:
+            if mask_image.size != source_size:
+                raise HTTPException(status_code=422, detail="The mask dimensions must match the source image.")
+    except HTTPException:
+        raise
+    except (UnidentifiedImageError, OSError, ValueError):
+        raise HTTPException(status_code=422, detail="The source image or repair mask is invalid.")
+    headers = {"Authorization": f"Bearer {settings.inpainting_api_key}"} if settings.inpainting_api_key else {}
+    try:
+        async with ai_semaphore:
+            async with httpx.AsyncClient(timeout=settings.inpainting_timeout_seconds) as client:
+                provider_response = await client.post(
+                    endpoint,
+                    headers=headers,
+                    data={"prompt": prompt, "response_format": "image"},
+                    files={
+                        "image": (image.filename or "panorama.jpg", image_bytes, image.content_type),
+                        "mask": (mask.filename or "mask.png", mask_bytes, mask.content_type),
+                    },
+                )
+        provider_response.raise_for_status()
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="The local inpainting provider timed out.")
+    except httpx.HTTPStatusError:
+        raise HTTPException(status_code=502, detail="The local inpainting provider returned an error.")
+    except httpx.HTTPError:
+        raise HTTPException(status_code=502, detail="Could not connect to the configured local inpainting provider.")
+    output_bytes = provider_response.content
+    if not output_bytes or len(output_bytes) > 30 * 1024 * 1024:
+        raise HTTPException(status_code=502, detail="The inpainting provider returned an empty or oversized image.")
+    try:
+        with Image.open(BytesIO(output_bytes)) as result_image:
+            result_image.verify()
+        with Image.open(BytesIO(output_bytes)) as result_image:
+            if result_image.size != source_size:
+                raise HTTPException(status_code=502, detail="The inpainting result dimensions do not match the source.")
+            output_format = result_image.format
+    except HTTPException:
+        raise
+    except (UnidentifiedImageError, OSError, ValueError):
+        raise HTTPException(status_code=502, detail="The inpainting provider did not return a valid image.")
+    media_type = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}.get(output_format)
+    if not media_type:
+        raise HTTPException(status_code=502, detail="The inpainting provider must return JPEG, PNG, or WebP.")
+    return Response(content=output_bytes, media_type=media_type, headers={"X-Inpainting-Provider": "configured-local-endpoint"})
 
 
 @app.post("/api/ai/assist")
