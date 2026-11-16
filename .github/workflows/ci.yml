@@ -89,3 +89,5 @@ jobs:
           docker compose --env-file infra/.env -f infra/docker-compose.yml config --quiet
       - name: Build deployable Docker images
         run: docker compose --env-file infra/.env -f infra/docker-compose.yml build api web
+      - name: Validate Nginx configuration
+        run: docker compose --env-file infra/.env -f infra/docker-compose.yml run --rm --no-deps web nginx -t
