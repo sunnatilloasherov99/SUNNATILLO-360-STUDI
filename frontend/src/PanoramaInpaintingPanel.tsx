@@ -63,6 +63,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
   const t = labels[language];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
+  const lastMaskPoint = useRef<{ x: number; y: number } | null>(null);
   const requestVersion = useRef(0);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [brush, setBrush] = useState(36);
@@ -108,6 +109,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
         if (active) setConfigured(false);
       });
     drawing.current = false;
+    lastMaskPoint.current = null;
     setWorking(false);
     setHasMask(false);
     setResultUrl(current => {
@@ -138,10 +140,23 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     if (!context) return;
     const p = point(event);
     setHasMask(true);
+    const radius = brush * Math.max(1, canvas.width / 1600);
     context.fillStyle = "#ffffff";
+    context.strokeStyle = "#ffffff";
+    context.lineWidth = radius * 2;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    const previous = lastMaskPoint.current;
+    if (previous) {
+      context.beginPath();
+      context.moveTo(previous.x, previous.y);
+      context.lineTo(p.x, p.y);
+      context.stroke();
+    }
     context.beginPath();
-    context.arc(p.x, p.y, brush * Math.max(1, canvas.width / 1600), 0, Math.PI * 2);
+    context.arc(p.x, p.y, radius, 0, Math.PI * 2);
     context.fill();
+    lastMaskPoint.current = p;
   }
 
   async function generate() {
@@ -214,7 +229,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     </div>
     <div className="inpainting-canvas-wrap" style={{ aspectRatio: dimensions.width && dimensions.height ? dimensions.width + "/" + dimensions.height : "2 / 1" }}>
       <img src={imageUrl} alt={t.before} />
-      <canvas ref={canvasRef} onPointerDown={event => { if (working) return; drawing.current = true; event.currentTarget.setPointerCapture(event.pointerId); paint(event); }} onPointerMove={paint} onPointerUp={() => { drawing.current = false; }} onPointerCancel={() => { drawing.current = false; }} onLostPointerCapture={() => { drawing.current = false; }} />
+      <canvas ref={canvasRef} onPointerDown={event => { if (working) return; drawing.current = true; lastMaskPoint.current = null; event.currentTarget.setPointerCapture(event.pointerId); paint(event); }} onPointerMove={paint} onPointerUp={() => { drawing.current = false; lastMaskPoint.current = null; }} onPointerCancel={() => { drawing.current = false; lastMaskPoint.current = null; }} onLostPointerCapture={() => { drawing.current = false; lastMaskPoint.current = null; }} />
     </div>
     {resultUrl && <div className="inpainting-result">
       <h4>{t.after}</h4>
