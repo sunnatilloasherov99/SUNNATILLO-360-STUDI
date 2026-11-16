@@ -58,7 +58,7 @@ Backups include a PostgreSQL custom-format dump, original media archive and SHA-
 ## Implemented boundaries
 - Account registration/login and per-user project/media access control.
 - 360° panorama viewing, non-destructive image adjustments and edited JPEG export.
-- Multi-scene virtual-tour builder with clickable scene hotspots.
+- Multi-scene virtual-tour builder with clickable scene hotspots and revocable public viewing links.
 - Quality report and authenticated ZIP project export.
 - MP4/WebM upload and basic equirectangular 360° video playback; no timeline editing or transcoding yet.
 - Optional text-only local Ollama AI; no image/video analysis or cloud AI adapters yet.
