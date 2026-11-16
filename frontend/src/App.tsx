@@ -6,6 +6,7 @@ import MediaStudio from "./MediaStudio";
 import TourStudio from "./TourStudio";
 import AIStudio from "./AIStudio";
 import VideoStudio from "./VideoStudio";
+import PublicTour from "./PublicTour";
 
 type Mode = "ai" | "manual" | "collab";
 type Project = { id: string; name: string; mode: Mode; updatedAt: string };
@@ -16,6 +17,7 @@ const modeKeys: { id: Mode; title: "aiMode" | "manualMode" | "collabMode"; descr
   { id: "collab", title: "collabMode", description: "collabModeDesc" }
 ];
 export default function App() {
+  const publicToken = window.location.pathname.match(/^\\/tour\\/([a-f0-9]{32})$/i)?.[1] || "";
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem("s360-language");
     return saved === "ru" || saved === "en" ? saved : "uz";
@@ -54,7 +56,7 @@ export default function App() {
       setApiError(language === "ru" ? "Не удалось подключиться к серверу. Проверьте, запущен ли API." : language === "en" ? "Could not connect to the server. Check whether the API is running." : "Serverga ulanib bo‘lmadi. API ishga tushirilganini tekshiring.");
     } finally { setLoadingProjects(false); }
   }
-  useEffect(() => { void loadProjects(); }, [token]);
+  useEffect(() => { if (!publicToken) void loadProjects(); }, [token, publicToken]);
   function changeLanguage(next: Language) { setLanguage(next); localStorage.setItem("s360-language", next); }
   async function authenticate() {
     if (!email.trim() || !password || authLoading) return;
@@ -93,6 +95,7 @@ export default function App() {
       setApiError(error instanceof Error && error.message !== "API" ? error.message : (language === "ru" ? "Не удалось сохранить проект на сервере." : language === "en" ? "Could not save the project to the server." : "Loyihani serverga saqlab bo‘lmadi."));
     } finally { setSavingProject(false); }
   }
+  if (publicToken) return <PublicTour token={publicToken} language={language}/>;
   if (!token) return <div className="app-shell"><main className="main"><header className="topbar"><div className="breadcrumb">SUNNATILLO 360° STUDIO <span>/</span> {language === "ru" ? "Аккаунт" : language === "en" ? "Account" : "Hisob"}</div><label className="language"><Languages size={16}/><select value={language} onChange={e => changeLanguage(e.target.value as Language)}><option value="uz">O‘zbekcha</option><option value="ru">Русский</option><option value="en">English</option></select></label></header><section className="hero"><div className="hero-copy"><div className="eyebrow"><span/> SUNNATILLO 360° STUDIO</div><h1>{language === "ru" ? "Ваше пространство 360°" : language === "en" ? "Your 360° workspace" : "360° ish muhitingiz"}</h1><p>{language === "ru" ? "Войдите или создайте аккаунт, чтобы ваши проекты и медиафайлы были доступны только вам." : language === "en" ? "Sign in or create an account so your projects and media remain private to you." : "Loyiha va media fayllaringiz faqat sizga tegishli bo‘lishi uchun hisobingizga kiring yoki yangi hisob yarating."}</p><div className="auth-panel"><div className="modal-actions"><button className={authMode === "register" ? "primary" : "secondary"} onClick={() => {setAuthMode("register");setAuthError("");}}>{language === "ru" ? "Регистрация" : language === "en" ? "Create account" : "Ro‘yxatdan o‘tish"}</button><button className={authMode === "login" ? "primary" : "secondary"} onClick={() => {setAuthMode("login");setAuthError("");}}>{language === "ru" ? "Войти" : language === "en" ? "Sign in" : "Kirish"}</button></div><label className="field-label">Email<input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@example.com"/></label><label className="field-label">{language === "ru" ? "Пароль" : language === "en" ? "Password" : "Parol"}<input type="password" autoComplete={authMode === "register" ? "new-password" : "current-password"} value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&void authenticate()} placeholder={language === "uz" ? "Kamida 8 ta belgi" : language === "ru" ? "Не менее 8 символов" : "At least 8 characters"}/></label>{authError && <div className="media-alert">{authError}</div>}<button className="primary" disabled={!email.trim() || !password || authLoading} onClick={()=>void authenticate()}>{authLoading ? "…" : authMode === "register" ? (language === "ru" ? "Создать аккаунт" : language === "en" ? "Create account" : "Hisob yaratish") : (language === "ru" ? "Войти" : language === "en" ? "Sign in" : "Kirish")}<ChevronRight size={17}/></button><p className="privacy-inline"><ShieldCheck size={16}/>{language === "ru" ? "Пароль хранится в виде защищённого хеша." : language === "en" ? "Your password is stored as a secure hash." : "Parolingiz serverda himoyalangan xesh ko‘rinishida saqlanadi."}</p></div></div><div className="hero-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="planet"><Aperture size={76} strokeWidth={1.1}/></div></div></section><footer><span>© 2026 SUNNATILLO 360° STUDIO</span><span>PRIVATE WORKSPACE</span></footer></main></div>;
   return <div className="app-shell">
     <aside className="sidebar">
