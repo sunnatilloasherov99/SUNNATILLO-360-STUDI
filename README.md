@@ -19,7 +19,7 @@ An independent, portable web platform for professional 360° media workflows and
 - Server-backed project creation and listing through the FastAPI API.
 - 360° photo workspace: import JPG/PNG/WebP panoramas, inspect dimensions and aspect ratio, and interactively look around 2:1 equirectangular images.
 - Initial 360° video workspace: upload MP4/WebM, preview equirectangular footage on an interactive Three.js sphere, drag to look around and use playback controls.
-- Save non-destructive 360° video trim in/out markers per project and preview only the selected playback range; original video remains unchanged.
+- Save non-destructive 360° video trim in/out markers per project, preview the selected range and export the trimmed result as MP4 with server-side FFmpeg; the original video remains unchanged.
 - Original imported panorama is not modified.
 - Non-destructive brightness, contrast and saturation adjustments can be previewed and saved per project.
 - Horizontal seam repositioning can be previewed and exported to a new JPEG without overwriting the source; it moves the panorama edge but does not reconstruct missing pixels.
