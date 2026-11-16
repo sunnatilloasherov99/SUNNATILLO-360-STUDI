@@ -12,7 +12,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Generator, Literal
 
-from fastapi import FastAPI, Depends, File, HTTPException, UploadFile, Header, Request
+from fastapi import FastAPI, Depends, File, HTTPException, UploadFile, Header, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
@@ -255,7 +255,7 @@ async def capabilities():
 
 @app.post("/api/auth/register", status_code=201)
 @limiter.limit("10/minute")
-def register(request: Request, response: Response, payload: RegisterPayload, db: Session = Depends(get_db)):
+def register(request: Request, response: Response, payload: RegisterPayload = Body(...), db: Session = Depends(get_db)):
     email = normalize_email(payload.email)
     if "@" not in email or "." not in email.rsplit("@", 1)[-1]:
         raise HTTPException(status_code=422, detail="Email manzilini to‘g‘ri kiriting.")
@@ -270,7 +270,7 @@ def register(request: Request, response: Response, payload: RegisterPayload, db:
 
 @app.post("/api/auth/login")
 @limiter.limit("10/minute")
-def login(request: Request, response: Response, payload: LoginPayload, db: Session = Depends(get_db)):
+def login(request: Request, response: Response, payload: LoginPayload = Body(...), db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.email == normalize_email(payload.email)))
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Email yoki parol noto‘g‘ri.")
@@ -380,7 +380,7 @@ def ai_capabilities(user: User = Depends(current_user)):
 
 @app.post("/api/ai/assist")
 @limiter.limit("20/minute")
-async def ai_assist(request: Request, response: Response, payload: AIRequest, user: User = Depends(current_user)):
+async def ai_assist(request: Request, response: Response, payload: AIRequest = Body(...), user: User = Depends(current_user)):
     if not settings.ollama_base_url.strip():
         raise HTTPException(
             status_code=503,
