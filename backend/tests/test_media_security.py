@@ -226,7 +226,7 @@ def test_video_export_is_private_and_requires_ffmpeg(client: TestClient, monkeyp
     uploaded = client.post(
         f"/api/projects/{project_id}/media",
         headers=headers,
-        files={"file": ("walkthrough.mp4", b"\\x00\\x00\\x00\\x18ftypisom\\x00\\x00\\x02\\x00isomiso2", "video/mp4")},
+        files={"file": ("walkthrough.mp4", b"\x00\x00\x00\x18ftypisom\x00\x00\x02\x00isomiso2", "video/mp4")},
     )
     assert uploaded.status_code == 201, uploaded.text
     media_id = uploaded.json()["id"]
