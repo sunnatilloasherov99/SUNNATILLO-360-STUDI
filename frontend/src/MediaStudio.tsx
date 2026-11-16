@@ -96,6 +96,7 @@ export default function MediaStudio({ token, language, projectId, projectName, p
  async function saveEditedCopy(){if(!url||!meta||!projectId||savingCopy)return;setSavingCopy(true);setExportMessage("");try{const output=await renderEditedBlob();const fileName=meta.name.replace(/\.[^.]+$/,"") + "-edited.jpg";const body=new FormData();body.append("file",output,fileName);const response=await fetch("/api/projects/"+projectId+"/media",{method:"POST",headers:{Authorization:"Bearer "+token},body});if(!response.ok)throw new Error();const asset:Asset=await response.json();setAssets(current=>[asset,...current.filter(item=>item.id!==asset.id)]);setExportMessage(t.savedCopy);}catch{setError(t.saveCopyFailed);}finally{setSavingCopy(false);}}
  useEffect(()=>{setUrl(null);setMeta(null);setAssets([]);setSeamReport(null);setSettingsMessage("");if(projectId){void loadAssets(projectId);void loadEditorSettings(projectId);}},[projectId]);
  useEffect(()=>()=>{if(url?.startsWith("blob:"))URL.revokeObjectURL(url);},[url]);
+ useEffect(()=>{setShowOriginal(false);},[url]);
  useEffect(()=>{
   let cancelled=false;let generatedUrl:string|null=null;
   setPreviewUrl(null);
