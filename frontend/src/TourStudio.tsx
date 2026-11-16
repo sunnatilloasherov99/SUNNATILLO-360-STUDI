@@ -169,8 +169,8 @@ export default function TourStudio({ token, language, projectId, projectName, on
   if(!activeScene)return;
   updateScene(activeScene.id,{hotspots:activeScene.hotspots.filter((_,i)=>i!==index)});
  }
- async function saveTour(){
-  if(saving)return;
+ async function saveTour():Promise<boolean>{
+  if(saving)return false;
   setSaving(true);setError("");setMessage("");
   try{
    const response=await fetch(`/api/projects/${projectId}/tour`,{
@@ -180,9 +180,27 @@ export default function TourStudio({ token, language, projectId, projectName, on
    });
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw new Error(data.detail||t.saveError);
-   setMessage(t.saved);
-  }catch(error){setError(error instanceof Error?error.message:t.saveError);}
+   setMessage(t.saved);return true;
+  }catch(error){setError(error instanceof Error?error.message:t.saveError);return false;}
   finally{setSaving(false);}
+ }
+ async function exportProject(){
+  if(exporting)return;
+  setExporting(true);setError("");setMessage("");
+  try{
+   const saved=await saveTour();
+   if(!saved)return;
+   const response=await fetch(`/api/projects/${projectId}/export`,{headers:{Authorization:`Bearer ${token}`}});
+   if(!response.ok)throw new Error();
+   const blob=await response.blob();
+   const url=URL.createObjectURL(blob);
+   const link=document.createElement("a");
+   link.href=url;link.download=`sunnatillo-360-${projectId}.zip`;
+   document.body.appendChild(link);link.click();link.remove();
+   window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+   setMessage(t.exported);
+  }catch{setError(t.saveError);}
+  finally{setExporting(false);}
  }
 
  return <section className="tour-studio">
