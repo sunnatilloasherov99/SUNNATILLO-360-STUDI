@@ -273,6 +273,12 @@ def test_local_ai_is_opt_in_and_requires_authentication(client: TestClient) -> N
         json={"role": "tour_planner", "prompt": "Plan a small tour", "language": "en"},
     )
     assert unavailable.status_code == 503
+    collaboration = client.post(
+        "/api/ai/assist",
+        headers=bearer(token),
+        json={"role": "collaboration", "prompt": "Review the complete project", "language": "en"},
+    )
+    assert collaboration.status_code == 503
 
 
 def test_login_rate_limit_returns_429(client: TestClient) -> None:
