@@ -566,7 +566,7 @@ def save_project_tour(project_id: str, payload: TourPayload, user: User = Depend
 def ai_capabilities(user: User = Depends(current_user)):
     return {
         "providers": [{"id": "ollama", "name": "Ollama (local)", "configured": bool(settings.ollama_base_url), "model": settings.ollama_model}],
-        "roles": list(AI_ROLE_PROMPTS.keys()),
+        "roles": [*AI_ROLE_PROMPTS.keys(), "collaboration"],
         "external_data_sent": False,
     }
 
