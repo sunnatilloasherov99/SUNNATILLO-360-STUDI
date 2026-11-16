@@ -12,6 +12,17 @@ DB_FILE="$(realpath "$1")"
 MEDIA_FILE="$(realpath "$2")"
 
 [[ -f "$DB_FILE" && -f "$MEDIA_FILE" ]] || { echo "Backup file not found." >&2; exit 2; }
+DB_NAME="$(basename "$DB_FILE")"
+if [[ "$DB_NAME" =~ ^studio-db-(.+)\\.dump$ ]]; then
+  STAMP="${BASH_REMATCH[1]}"
+  CHECKSUM_FILE="$(dirname "$DB_FILE")/studio-$STAMP.sha256"
+  [[ -f "$CHECKSUM_FILE" ]] || { echo "Matching SHA-256 file not found: $CHECKSUM_FILE" >&2; exit 2; }
+  (cd "$(dirname "$CHECKSUM_FILE")" && sha256sum -c "$(basename "$CHECKSUM_FILE")")
+else
+  echo "Unexpected database backup filename." >&2
+  exit 2
+fi
+[[ "$(basename "$MEDIA_FILE")" == "studio-media-$STAMP.tar.gz" ]] || { echo "Database and media backup timestamps do not match." >&2; exit 2; }
 
 echo "WARNING: this replaces the current database and media files."
 read -r -p 'Type RESTORE to continue: ' CONFIRM
