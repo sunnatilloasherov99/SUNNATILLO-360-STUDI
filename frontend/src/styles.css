@@ -35,3 +35,5 @@
 .saved-media-item small{font-size:9px;color:#8195b4}
 
 .auth-panel{width:min(100%,440px);display:grid;gap:16px;margin-top:28px;padding:24px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:20px;background:rgba(255,255,255,.035)}.auth-panel .field-label{display:grid;gap:8px}.auth-panel input{width:100%;box-sizing:border-box}.auth-panel>.primary{width:100%;justify-content:center}.auth-panel .modal-actions{display:flex;gap:10px}.auth-panel .modal-actions button{flex:1}.auth-panel .privacy-inline{font-size:12px;line-height:1.5}
+
+.editor-controls{display:grid;gap:14px;margin:18px 0;padding:18px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:16px;background:rgba(255,255,255,.025)}.editor-controls h3{margin:0 0 4px}.editor-controls>label{display:grid;grid-template-columns:110px 1fr 48px;align-items:center;gap:12px;font-size:13px}.editor-controls input[type=range]{width:100%;accent-color:var(--accent,#8b9cff)}.editor-controls>label span{text-align:right;font-variant-numeric:tabular-nums}.editor-actions{display:flex;flex-wrap:wrap;gap:10px}
