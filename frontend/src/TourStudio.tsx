@@ -244,6 +244,7 @@ export default function TourStudio({ token, language, projectId, projectName, on
    });
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw new Error(data.detail||t.saveError);
+   if(tour.scenes.length===0&&shareEnabled){setShareEnabled(false);setShareUrl("");}
    setMessage(t.saved);return true;
   }catch(error){setError(error instanceof Error?error.message:t.saveError);return false;}
   finally{setSaving(false);}
