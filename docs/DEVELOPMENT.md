@@ -45,7 +45,15 @@ cd infra
 docker compose up -d --build
 ```
 
-The API container runs `alembic upgrade head` before starting FastAPI. PostgreSQL and media files use separate persistent Docker volumes. Put the public site behind HTTPS; restrict direct public access to the API/database ports with firewall rules and expose the web entry point through a reverse proxy where appropriate.
+The API container runs `alembic upgrade head` before starting FastAPI. PostgreSQL and media files use separate persistent Docker volumes.
+
+### Backup and restore
+Run these from the `infra/` directory on a Linux host with Docker Compose:
+```bash
+bash backup.sh
+bash restore.sh ../backups/studio-db-TIMESTAMP.dump ../backups/studio-media-TIMESTAMP.tar.gz
+```
+Backups include a PostgreSQL custom-format dump, original media archive and SHA-256 checksums. Store copies off-server in encrypted storage. Restore replaces the current database and media; the script requires typing `RESTORE` before proceeding. Put the public site behind HTTPS; restrict direct public access to the API/database ports with firewall rules and expose the web entry point through a reverse proxy where appropriate.
 
 ## Implemented boundaries
 - Account registration/login and per-user project/media access control.
