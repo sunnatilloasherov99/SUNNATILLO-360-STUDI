@@ -62,6 +62,6 @@ Backups include a PostgreSQL custom-format dump, original media archive and SHA-
 - Multi-scene virtual-tour builder with clickable scene hotspots and revocable public viewing links.
 - Quality report and authenticated ZIP project export.
 - MP4/WebM upload and basic equirectangular 360° video playback; no timeline editing or transcoding yet.
-- Optional text-only local Ollama AI; no image/video analysis or cloud AI adapters yet.
+- Optional local Ollama AI specialists and parallel three-role collaboration; selected project images can be analyzed with a vision-capable model. Video analysis and cloud AI adapters are not yet implemented.
 - Google Street View, Yandex Maps and 2GIS publishing are not yet connected. Publishing must use official APIs and account permissions.
 - Production launch still requires rate limiting, email verification/password reset, HTTPS configuration and a tested backup/restore procedure.
