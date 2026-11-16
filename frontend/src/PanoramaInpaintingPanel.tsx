@@ -214,7 +214,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     </div>
     <div className="inpainting-canvas-wrap" style={{ aspectRatio: dimensions.width && dimensions.height ? dimensions.width + "/" + dimensions.height : "2 / 1" }}>
       <img src={imageUrl} alt={t.before} />
-      <canvas ref={canvasRef} onPointerDown={event => { if (working) return; drawing.current = true; event.currentTarget.setPointerCapture(event.pointerId); paint(event); }} onPointerMove={paint} onPointerUp={() => { drawing.current = false; }} onPointerCancel={() => { drawing.current = false; }} />
+      <canvas ref={canvasRef} onPointerDown={event => { if (working) return; drawing.current = true; event.currentTarget.setPointerCapture(event.pointerId); paint(event); }} onPointerMove={paint} onPointerUp={() => { drawing.current = false; }} onPointerCancel={() => { drawing.current = false; }} onLostPointerCapture={() => { drawing.current = false; }} />
     </div>
     {resultUrl && <div className="inpainting-result">
       <h4>{t.after}</h4>
