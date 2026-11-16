@@ -5,13 +5,15 @@ import uuid
 import hashlib
 import secrets
 import json
+from io import BytesIO
+from zipfile import ZIP_DEFLATED, ZipFile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Generator
 
 from fastapi import FastAPI, Depends, File, HTTPException, UploadFile, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, create_engine, select, inspect, text
@@ -347,6 +349,44 @@ def save_project_tour(project_id: str, payload: TourPayload, user: User = Depend
     project.updated_at = now_utc()
     db.commit()
     return payload.model_dump()
+
+
+@app.get("/api/projects/{project_id}/export")
+def export_project(project_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    assets = db.scalars(
+        select(MediaAsset).where(MediaAsset.project_id == project_id).order_by(MediaAsset.created_at.asc())
+    ).all()
+    archive_buffer = BytesIO()
+    with ZipFile(archive_buffer, "w", compression=ZIP_DEFLATED) as archive:
+        archive.writestr("project.json", json.dumps(project_data(project), ensure_ascii=False, indent=2))
+        archive.writestr("editor-settings.json", project.edit_settings_json or "{}")
+        archive.writestr("tour.json", project.tour_json or "{}")
+        missing_files = []
+        for asset in assets:
+            source = storage_dir / asset.stored_name
+            if not source.is_file():
+                missing_files.append(asset.id)
+                continue
+            safe_name = (asset.original_name or "media").replace(chr(92), "/").split("/")[-1]
+            archive.write(source, arcname=f"media/{asset.id}_{safe_name}")
+        archive.writestr("export-manifest.json", json.dumps({
+            "media_count": len(assets),
+            "missing_media_ids": missing_files,
+            "originals_included": len(assets) - len(missing_files),
+        }, ensure_ascii=False, indent=2))
+    filename = f"sunnatillo-360-{project_id}.zip"
+    return Response(
+        content=archive_buffer.getvalue(),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @app.delete("/api/projects/{project_id}", status_code=204)
