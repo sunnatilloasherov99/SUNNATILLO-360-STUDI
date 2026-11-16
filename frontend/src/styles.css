@@ -37,3 +37,35 @@
 .auth-panel{width:min(100%,440px);display:grid;gap:16px;margin-top:28px;padding:24px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:20px;background:rgba(255,255,255,.035)}.auth-panel .field-label{display:grid;gap:8px}.auth-panel input{width:100%;box-sizing:border-box}.auth-panel>.primary{width:100%;justify-content:center}.auth-panel .modal-actions{display:flex;gap:10px}.auth-panel .modal-actions button{flex:1}.auth-panel .privacy-inline{font-size:12px;line-height:1.5}
 
 .editor-controls{display:grid;gap:14px;margin:18px 0;padding:18px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:16px;background:rgba(255,255,255,.025)}.editor-controls h3{margin:0 0 4px}.editor-controls>label{display:grid;grid-template-columns:110px 1fr 48px;align-items:center;gap:12px;font-size:13px}.editor-controls input[type=range]{width:100%;accent-color:var(--accent,#8b9cff)}.editor-controls>label span{text-align:right;font-variant-numeric:tabular-nums}.editor-actions{display:flex;flex-wrap:wrap;gap:10px}
+
+.tour-studio{margin:38px 0 64px;padding:28px;border:1px solid var(--line,rgba(255,255,255,.1));border-radius:22px;background:rgba(255,255,255,.025)}
+.tour-meta{display:grid;grid-template-columns:1fr 1.5fr;gap:16px;margin:22px 0}
+.tour-meta textarea,.tour-scene-fields textarea{width:100%;box-sizing:border-box;resize:vertical}
+.tour-add-scene{display:flex;gap:12px;margin:16px 0 24px}
+.tour-add-scene select,.hotspot-form select{min-width:0;flex:1}
+.tour-layout{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:22px;align-items:start}
+.tour-scenes-panel,.tour-editor-panel{min-width:0}
+.tour-scenes-panel h3,.tour-editor-panel h3,.tour-hotspots h3{margin:0 0 14px}
+.tour-scene-card{display:flex;align-items:center;gap:8px;padding:10px;margin-bottom:8px;border:1px solid var(--line,rgba(255,255,255,.1));border-radius:12px;background:rgba(255,255,255,.02)}
+.tour-scene-card.selected{border-color:var(--accent,#8b9cff);background:rgba(120,140,255,.08)}
+.tour-scene-select{display:flex;align-items:center;gap:10px;flex:1;min-width:0;text-align:left;background:none;border:0;color:inherit;cursor:pointer}
+.tour-scene-select span{font-size:11px;opacity:.6;font-variant-numeric:tabular-nums}
+.tour-scene-select strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tour-scene-actions{display:flex;gap:3px}
+.tour-scene-actions button,.tour-hotspot-row button{border:0;border-radius:7px;padding:5px 8px;background:rgba(255,255,255,.06);color:inherit;cursor:pointer}
+.tour-scene-actions button:disabled{opacity:.3;cursor:not-allowed}
+.tour-scene-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.tour-viewer{width:100%;height:clamp(300px,45vw,560px);overflow:hidden;border-radius:16px;background:#101116}
+.tour-hotspots{margin-top:22px;padding:18px;border:1px solid var(--line,rgba(255,255,255,.1));border-radius:16px}
+.tour-hotspots>p{font-size:13px;opacity:.7;line-height:1.5}
+.tour-hotspot-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line,rgba(255,255,255,.08))}
+.tour-hotspot-row span{flex:1}
+.tour-hotspot-row small{opacity:.65;white-space:nowrap}
+.hotspot-form{display:grid;gap:10px;margin-top:16px}
+.hotspot-coordinates{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hotspot-coordinates label{display:grid;gap:6px;font-size:12px}
+.hotspot-coordinates input{width:100%;box-sizing:border-box}
+.tour-save-row{display:flex;justify-content:flex-end;margin-top:22px}
+.tour-hotspot-marker{border:1px solid rgba(255,255,255,.7);border-radius:999px;padding:8px 12px;background:rgba(20,25,40,.88);color:#fff;font:600 12px/1.2 inherit;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.35);cursor:pointer}
+@media(max-width:850px){.tour-layout{grid-template-columns:1fr}.tour-scenes-panel{order:2}.tour-meta,.tour-scene-fields{grid-template-columns:1fr}.tour-studio{padding:18px}}
+@media(max-width:560px){.tour-add-scene{flex-direction:column}.tour-viewer{height:340px}.tour-hotspot-row{flex-wrap:wrap}.tour-hotspot-row span{min-width:60%}}
