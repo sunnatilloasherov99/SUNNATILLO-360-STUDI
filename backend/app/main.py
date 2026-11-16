@@ -130,11 +130,18 @@ async def enforce_request_rate_limits(request: Request, call_next):
     count = None
     if rate_limit_redis is not None:
         try:
-            count = await rate_limit_redis.incr(key)
-            if count == 1:
-                await rate_limit_redis.expire(key, 60)
+            count = await rate_limit_redis.eval(
+                "local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],ARGV[1]); end; return n",
+                1,
+                key,
+                60,
+            )
         except RedisError:
-            count = None
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Rate limiting service is temporarily unavailable."},
+                headers={"Retry-After": "30"},
+            )
 
     if count is None:
         now = monotonic()
