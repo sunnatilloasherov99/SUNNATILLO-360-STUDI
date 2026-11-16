@@ -11,7 +11,7 @@ const labels = {
   roles:"Mutaxassisni tanlang",prompt:"Vazifangiz yoki savolingiz",context:"Qo‘shimcha matnli ma’lumot (ixtiyoriy)",
   run:"AI dan javob olish",working:"AI ishlamoqda…",result:"AI javobi",back:"Orqaga",
   noProvider:"Mahalliy AI ulanmagan. Bepul Ollama dasturini serverga o‘rnating va OLLAMA_BASE_URL sozlamasini kiriting.",
-  textOnly:"Maxfiylik: faqat shu oynada yozgan matningiz va ixtiyoriy tanlagan rasmingiz yuboriladi. Hech narsa avtomatik tanlanmaydi.",imageOptional:"Tahlil uchun panorama tanlang (ixtiyoriy)",imageConsent:"Rasm faqat «AI dan javob olish» tugmasini bosganingizda mahalliy Ollama modeliga yuboriladi. Rasm tahlili uchun vision model kerak.",
+  textOnly:"Maxfiylik: faqat shu oynada yozgan matningiz va ixtiyoriy tanlagan rasmingiz yuboriladi. Hech narsa avtomatik tanlanmaydi.",imageOptional:"Tahlil uchun panorama yoki video tanlang (ixtiyoriy)",imageConsent:"Tanlangan rasm yoki videodan olingan 3 ta kadr faqat «AI dan javob olish» tugmasini bosganingizda mahalliy Ollama modeliga yuboriladi. Vision model kerak.",
   provider:"Mahalliy Ollama modeli",ready:"Ulangan",offline:"Sozlanmagan",
   panorama_quality:["360° sifat tahlilchisi","Panorama sifati, o‘lcham va tikuv muammolari bo‘yicha maslahat."],
   tour_planner:["Virtual tur rejissyori","Sahnalar ketma-ketligi va qulay navigatsiya rejasini tuzish."],
@@ -24,7 +24,7 @@ const labels = {
   roles:"Выберите специалиста",prompt:"Задача или вопрос",context:"Дополнительный текстовый контекст (необязательно)",
   run:"Получить ответ AI",working:"AI работает…",result:"Ответ AI",back:"Назад",
   noProvider:"Локальный AI не подключён. Установите бесплатный Ollama на сервер и задайте OLLAMA_BASE_URL.",
-  textOnly:"Конфиденциальность: отправляется только введённый текст и выбранное вами изображение. Ничего не выбирается автоматически.",imageOptional:"Выберите панораму для анализа (необязательно)",imageConsent:"Изображение отправляется локальной модели Ollama только после нажатия кнопки. Для анализа нужен vision-модель.",
+  textOnly:"Конфиденциальность: отправляется только введённый текст и выбранное вами изображение. Ничего не выбирается автоматически.",imageOptional:"Выберите панораму или видео для анализа (необязательно)",imageConsent:"Выбранное изображение или 3 кадра из видео отправляются локальной модели Ollama только после нажатия кнопки. Нужна vision-модель.",
   provider:"Локальная модель Ollama",ready:"Подключено",offline:"Не настроено",
   panorama_quality:["Аналитик качества 360°","Советы по качеству панорамы, разрешению и дефектам."],
   tour_planner:["Режиссёр виртуального тура","Порядок сцен и удобная навигация для посетителей."],
@@ -37,7 +37,7 @@ const labels = {
   roles:"Choose a specialist",prompt:"Your task or question",context:"Additional text context (optional)",
   run:"Ask AI",working:"AI is working…",result:"AI response",back:"Back",
   noProvider:"Local AI is not connected. Install free Ollama on the server and set OLLAMA_BASE_URL.",
-  textOnly:"Privacy: only the text you enter and an image you explicitly select are sent. Nothing is selected automatically.",imageOptional:"Choose a panorama to analyze (optional)",imageConsent:"The image is sent to your local Ollama model only when you press Ask AI. A vision-capable model is required for image analysis.",
+  textOnly:"Privacy: only the text you enter and an image you explicitly select are sent. Nothing is selected automatically.",imageOptional:"Choose a panorama or video to analyze (optional)",imageConsent:"The selected image or three extracted video frames are sent to your local Ollama model only when you press Ask AI. A vision-capable model is required.",
   provider:"Local Ollama model",ready:"Connected",offline:"Not configured",
   panorama_quality:["360° quality analyst","Advice on panorama quality, resolution and defects."],
   tour_planner:["Virtual tour planner","Plan scene order and visitor navigation."],
@@ -74,7 +74,7 @@ export default function AIStudio({token,language,projectId,onBack}:Props){
   if(!projectId)return;
   fetch(`/api/projects/${projectId}/media`,{headers:{Authorization:`Bearer ${token}`}})
    .then(r=>r.ok?r.json():Promise.reject())
-   .then(data=>{if(!cancelled)setAssets((Array.isArray(data)?data:[]).filter((asset:Asset)=>asset.contentType.startsWith("image/")));})
+   .then(data=>{if(!cancelled)setAssets((Array.isArray(data)?data:[]).filter((asset:Asset)=>asset.contentType.startsWith("image/")||asset.contentType.startsWith("video/")));})
    .catch(()=>{if(!cancelled)setAssets([]);});
   return()=>{cancelled=true;};
  },[token,projectId]);
