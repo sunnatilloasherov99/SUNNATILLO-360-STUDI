@@ -51,8 +51,8 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] AI capabilities javobida provider mavjudligi va foydalanuvchi tasdig‘i talab qilinishi ko‘rsatiladi.
 - [x] `.env.example` da ixtiyoriy `INPAINTING_ENDPOINT_URL`, `INPAINTING_API_KEY`, `INPAINTING_TIMEOUT_SECONDS` sozlamalari hujjatlashtirildi.
 - [ ] Foydalanuvchi o‘zi sozlagan ComfyUI workflow uchun mos HTTP bridge va real model sinovi. To‘g‘ridan-to‘g‘ri ComfyUI workflow API hali ulanmagan.
-- [ ] Frontend’da maska chizish, natijani oldin/keyin ko‘rish va faqat foydalanuvchi tasdiqlagandan keyin qabul qilish.
-- [ ] Model mavjud bo‘lmasa, AI boshqaruvini aniq o‘chirish; manual vositalar ishlashda davom etishi.
+- [x] Frontend’da oq maska cho‘tkasi, AI yuborishdan oldin rozilik oynasi, oldin/keyin preview va natijani qabul/rad etish qo‘shildi (commit `5d6b50b`, `44d87b6`).
+- [x] `/api/ai/capabilities` orqali provider mavjudligi tekshiriladi; AI tugmasi provider sozlanmagan bo‘lsa o‘chiq, qo‘lda tuzatish vositasi alohida ishlashda davom etadi.
 
 ### 5.4 Eksport va qabul sinovlari
 - [ ] Tahrir tarixi va source asset bog'lanishi.
@@ -109,9 +109,9 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 ## Hozirgi navbatdagi ishlar
 
 1. 5.2 clone brush uchun frontend build va vizual sinovni yakunlash.
-2. 5.3 frontend mask editor, explicit confirmation va before/after preview.
-3. Tahrir qatlamini saqlash va haqiqiy panorama bilan qabul sinovlarini qo‘shish.
-4. Har bir commitdan so‘ng CI natijasini qayta tekshirish.
+2. 5.3 uchun ComfyUI HTTP bridge va haqiqiy lokal model bilan integratsion sinov.
+3. 5.4 uchun AI natijasi, manual patch va rang sozlamalari birga eksport bo‘lishini avtomatlashtirilgan testlar bilan tekshirish.
+4. Haqiqiy telefon panoramasi bilan vizual qabul sinovi; CI natijasini kuzatish.
 
 ## Reliz hisoboti
 
