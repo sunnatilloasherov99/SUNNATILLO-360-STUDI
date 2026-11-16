@@ -20,6 +20,8 @@ An independent, portable web platform for professional 360° media workflows and
 - First 360° media workspace: import a JPG/PNG/WebP panorama, inspect dimensions and aspect ratio, and interactively look around a 2:1 equirectangular panorama.
 - Original imported panorama is not modified.
 - Non-destructive brightness, contrast and saturation adjustments can be previewed and saved per project.
+- Export adjusted panorama images as new JPEG files while preserving the uploaded original.
+- Build private multi-scene virtual tours from uploaded panoramas, reorder scenes and connect them with clickable in-view hotspots.
 - FastAPI health and capability endpoints.
 - Server-side project create/list/delete API backed by SQLAlchemy and PostgreSQL (SQLite is available for local development).
 - Persistent JPEG/PNG/WebP media upload, listing and file delivery endpoints with a configurable upload limit.
