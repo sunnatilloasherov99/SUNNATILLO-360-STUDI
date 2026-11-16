@@ -10,7 +10,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from PIL import Image, UnidentifiedImageError
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Literal
 
 from fastapi import FastAPI, Depends, File, HTTPException, UploadFile, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,6 +20,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, create_engine, select, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker, Session
 import jwt
+import httpx
 
 
 class Settings(BaseSettings):
@@ -31,6 +32,9 @@ class Settings(BaseSettings):
     max_upload_mb: int = 100
     jwt_secret: str = "CHANGE-ME-IN-PRODUCTION"
     token_expire_hours: int = 24
+    ollama_base_url: str = ""
+    ollama_model: str = "llama3.2"
+    ollama_timeout_seconds: int = 120
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
@@ -173,6 +177,21 @@ class EditorSettings(BaseModel):
     saturation: float = Field(default=1.0, ge=0.0, le=2.0)
 
 
+class AIRequest(BaseModel):
+    role: Literal["panorama_quality", "tour_planner", "tour_description", "stitching_advisor"]
+    prompt: str = Field(min_length=1, max_length=4000)
+    context: str = Field(default="", max_length=10000)
+    language: Literal["uz", "ru", "en"] = "uz"
+
+
+AI_ROLE_PROMPTS = {
+    "panorama_quality": "Act as a professional 360 panorama quality analyst. Review the user's supplied details, identify likely capture or stitching defects, explain confidence and give practical repair steps. Never claim to inspect an image unless image data was actually supplied.",
+    "tour_planner": "Act as a virtual-tour experience designer. Organize spaces into a clear visitor journey, recommend scene order and useful hotspot connections. Be specific and practical.",
+    "tour_description": "Act as a professional location and hospitality copywriter. Write accurate, clear descriptions for virtual-tour scenes. Do not invent amenities, measurements or business facts.",
+    "stitching_advisor": "Act as a 360 photo stitching specialist. Diagnose seams, parallax, exposure mismatch and alignment issues from the user's description. Recommend safe edits while preserving the original source.",
+}
+
+
 class TourHotspotInput(BaseModel):
     target_scene_id: str = Field(min_length=1, max_length=64)
     title: str = Field(min_length=1, max_length=120)
@@ -233,7 +252,7 @@ async def capabilities():
         "server_projects": True,
         "persistent_media": True,
         "max_upload_mb": settings.max_upload_mb,
-        "ai_providers": [],
+        "ai_providers": [{"id": "ollama", "name": "Ollama local", "configured": bool(settings.ollama_base_url), "model": settings.ollama_model}],
         "publishing_targets": [],
         "note": "External providers are opt-in and must be configured server-side."
     }
@@ -350,6 +369,59 @@ def save_project_tour(project_id: str, payload: TourPayload, user: User = Depend
     project.updated_at = now_utc()
     db.commit()
     return payload.model_dump()
+
+
+@app.get("/api/ai/capabilities")
+def ai_capabilities(user: User = Depends(current_user)):
+    return {
+        "providers": [{"id": "ollama", "name": "Ollama (local)", "configured": bool(settings.ollama_base_url), "model": settings.ollama_model}],
+        "roles": list(AI_ROLE_PROMPTS.keys()),
+        "external_data_sent": False,
+    }
+
+
+@app.post("/api/ai/assist")
+async def ai_assist(payload: AIRequest, user: User = Depends(current_user)):
+    if not settings.ollama_base_url.strip():
+        raise HTTPException(
+            status_code=503,
+            detail="Local AI is not configured. Install Ollama and set OLLAMA_BASE_URL in the server environment.",
+        )
+    language_names = {"uz": "Uzbek", "ru": "Russian", "en": "English"}
+    system_prompt = (
+        f"{AI_ROLE_PROMPTS[payload.role]} "
+        f"Respond in {language_names[payload.language]}. "
+        "Be honest about uncertainty. Do not fabricate visual observations or platform publishing permissions."
+    )
+    user_content = payload.prompt.strip()
+    if payload.context.strip():
+        user_content += "\n\nUser-provided context (only this text was shared):\n" + payload.context.strip()
+    url = settings.ollama_base_url.rstrip("/") + "/api/chat"
+    try:
+        async with httpx.AsyncClient(timeout=settings.ollama_timeout_seconds) as client:
+            response = await client.post(
+                url,
+                json={
+                    "model": settings.ollama_model,
+                    "stream": False,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_content},
+                    ],
+                },
+            )
+            response.raise_for_status()
+            result = response.json()
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="The local AI model took too long to respond.")
+    except httpx.HTTPStatusError:
+        raise HTTPException(status_code=502, detail="The local AI service returned an error.")
+    except httpx.RequestError:
+        raise HTTPException(status_code=503, detail="Could not connect to the local Ollama service.")
+    output = result.get("message", {}).get("content", "").strip()
+    if not output:
+        raise HTTPException(status_code=502, detail="The local AI service returned an empty response.")
+    return {"provider": "ollama", "model": settings.ollama_model, "role": payload.role, "output": output}
 
 
 @app.get("/api/projects/{project_id}/quality")
