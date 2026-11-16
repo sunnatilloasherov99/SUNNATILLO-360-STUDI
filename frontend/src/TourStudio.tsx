@@ -67,7 +67,8 @@ export default function TourStudio({ token, language, projectId, projectName, on
  const [pitch,setPitch]=useState("0");
  const [panoramaUrl,setPanoramaUrl]=useState<string|null>(null);
  const [loading,setLoading]=useState(true);
- const [saving,setSaving]=useState(false);\n const [exporting,setExporting]=useState(false);
+ const [saving,setSaving]=useState(false);
+ const [exporting,setExporting]=useState(false);
  const [error,setError]=useState("");
  const [message,setMessage]=useState("");
  const activeScene=useMemo(()=>tour.scenes.find(scene=>scene.id===activeSceneId)??tour.scenes[0]??null,[tour.scenes,activeSceneId]);
