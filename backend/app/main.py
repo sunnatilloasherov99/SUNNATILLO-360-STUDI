@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response, JSONResponse
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, create_engine, select, update
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, create_engine, select, update
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker, Session
 import jwt
 import httpx
@@ -78,6 +78,8 @@ class Project(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     edit_settings_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
     tour_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    share_token: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True, index=True)
     media: Mapped[list["MediaAsset"]] = relationship(back_populates="project", cascade="all, delete-orphan")
 
 
@@ -265,6 +267,10 @@ class TourSceneInput(BaseModel):
     hotspots: list[TourHotspotInput] = Field(default_factory=list, max_length=20)
 
 
+class ShareUpdate(BaseModel):
+    enabled: bool
+
+
 class TourPayload(BaseModel):
     title: str = Field(default="360° virtual tour", min_length=1, max_length=160)
     description: str = Field(default="", max_length=2000)
@@ -394,6 +400,97 @@ def save_editor_settings(project_id: str, payload: EditorSettings, user: User = 
     project.updated_at = now_utc()
     db.commit()
     return payload.model_dump()
+
+
+@app.get("/api/projects/{project_id}/share")
+def get_project_share(project_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    return {
+        "enabled": bool(project.is_public and project.share_token),
+        "share_url": f"/tour/{project.share_token}" if project.is_public and project.share_token else None,
+    }
+
+
+@app.put("/api/projects/{project_id}/share")
+def update_project_share(project_id: str, payload: ShareUpdate, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    if payload.enabled:
+        project.share_token = project.share_token or uuid.uuid4().hex
+        project.is_public = True
+    else:
+        project.is_public = False
+        project.share_token = None
+    db.commit()
+    return {
+        "enabled": bool(project.is_public and project.share_token),
+        "share_url": f"/tour/{project.share_token}" if project.is_public and project.share_token else None,
+    }
+
+
+@app.get("/api/public/tours/{token}")
+def get_public_tour(token: str, db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.share_token == token, Project.is_public.is_(True)))
+    if not project:
+        raise HTTPException(status_code=404, detail="Public tour not found.")
+    try:
+        tour = json.loads(project.tour_json or "{}")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=404, detail="Public tour is unavailable.")
+    scenes = tour.get("scenes", []) if isinstance(tour, dict) else []
+    media_ids = {scene.get("media_id") for scene in scenes if isinstance(scene, dict)}
+    assets = db.scalars(
+        select(MediaAsset).where(
+            MediaAsset.project_id == project.id,
+            MediaAsset.id.in_(media_ids) if media_ids else MediaAsset.id == "",
+            MediaAsset.content_type.like("image/%"),
+        )
+    ).all()
+    asset_ids = {asset.id for asset in assets}
+    public_scenes = []
+    for scene in scenes:
+        if not isinstance(scene, dict) or scene.get("media_id") not in asset_ids:
+            continue
+        public_scenes.append({
+            "id": scene.get("id"),
+            "title": scene.get("title", ""),
+            "description": scene.get("description", ""),
+            "media_url": f"/api/public/media/{token}/{scene['media_id']}",
+            "hotspots": scene.get("hotspots", []),
+        })
+    return {
+        "project_name": project.name,
+        "title": tour.get("title") or project.name,
+        "description": tour.get("description", ""),
+        "scenes": public_scenes,
+    }
+
+
+@app.get("/api/public/media/{token}/{asset_id}")
+def get_public_media(token: str, asset_id: str, db: Session = Depends(get_db)):
+    asset = db.scalar(
+        select(MediaAsset).join(Project).where(
+            MediaAsset.id == asset_id,
+            Project.share_token == token,
+            Project.is_public.is_(True),
+            MediaAsset.content_type.like("image/%"),
+        )
+    )
+    if not asset:
+        raise HTTPException(status_code=404, detail="Public media not found.")
+    path = storage_dir / asset.stored_name
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Media file not found.")
+    return FileResponse(
+        path,
+        media_type=asset.content_type,
+        filename=asset.original_name,
+        content_disposition_type="inline",
+        headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-store"},
+    )
 
 
 @app.get("/api/projects/{project_id}/tour")
