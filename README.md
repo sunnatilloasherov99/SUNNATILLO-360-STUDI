@@ -41,7 +41,7 @@ An independent, portable web platform for professional 360° media workflows and
 - Full timeline editor, video processing, color grading, audio and keyframes.
 - Cloud AI provider adapters, multimodal image/video analysis and consent-based project-file context.
 - Advanced seam/stitching defect detection and automatic stitching repair.
-- Standalone hosted tour publishing and public tour sharing.
+- Standalone offline tour package export and official Google/Yandex/2GIS publishing integrations.
 - Google Street View publishing OAuth/upload workflow.
 - Yandex Maps and 2GIS publishing adapters.
 - Scheduled automatic backups, automated restore drills and desktop packaging.
