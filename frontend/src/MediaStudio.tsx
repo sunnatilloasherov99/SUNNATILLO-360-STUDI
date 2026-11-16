@@ -97,6 +97,7 @@ export default function MediaStudio({ token, language, projectId, projectName, p
  useEffect(()=>{setUrl(null);setMeta(null);setAssets([]);setSeamReport(null);setSettingsMessage("");if(projectId){void loadAssets(projectId);void loadEditorSettings(projectId);}},[projectId]);
  useEffect(()=>()=>{if(url?.startsWith("blob:"))URL.revokeObjectURL(url);},[url]);
  useEffect(()=>{setShowOriginal(false);},[url]);
+ useEffect(()=>{setShowOriginal(false);},[settings]);
  useEffect(()=>{
   let cancelled=false;let generatedUrl:string|null=null;
   setPreviewUrl(null);
