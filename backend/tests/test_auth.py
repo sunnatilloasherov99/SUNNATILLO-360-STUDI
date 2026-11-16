@@ -387,3 +387,55 @@ def test_quality_report_includes_heuristic_vertical_discontinuity_candidates(cli
     assert diagnostic["params"]["confidence"] == "low"
     assert diagnostic["params"]["interpretation"] == "heuristic_candidates_not_confirmed_stitching_defects"
     assert diagnostic["params"]["candidates"]
+
+
+def test_local_inpainting_uses_configured_provider_and_returns_valid_image(client: TestClient, monkeypatch) -> None:
+    import httpx
+    import app.main as main_module
+
+    token = register(client, "inpaint-success@example.com")
+    source = Image.new("RGB", (20, 10), (120, 130, 140))
+    source_buffer = BytesIO()
+    source.save(source_buffer, format="PNG")
+    mask = Image.new("RGBA", (20, 10), (0, 0, 0, 0))
+    from PIL import ImageDraw
+    ImageDraw.Draw(mask).rectangle((5, 2, 10, 7), fill=(255, 255, 255, 255))
+    mask_buffer = BytesIO()
+    mask.save(mask_buffer, format="PNG")
+    output_buffer = BytesIO()
+    source.save(output_buffer, format="PNG")
+    output_bytes = output_buffer.getvalue()
+
+    requests = []
+
+    def provider_handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        assert request.method == "POST"
+        assert b'name="image"' in request.content
+        assert b'name="mask"' in request.content
+        assert b'name="prompt"' in request.content
+        return httpx.Response(200, content=output_bytes, headers={"Content-Type": "image/png"})
+
+    transport = httpx.MockTransport(provider_handler)
+    real_async_client = httpx.AsyncClient
+    monkeypatch.setattr(main_module.settings, "inpainting_endpoint_url", "http://local-provider.test/inpaint")
+    monkeypatch.setattr(
+        main_module.httpx,
+        "AsyncClient",
+        lambda **kwargs: real_async_client(transport=transport, **kwargs),
+    )
+
+    response = client.post(
+        "/api/ai/inpaint",
+        headers=bearer(token),
+        files={
+            "image": ("source.png", source_buffer.getvalue(), "image/png"),
+            "mask": ("mask.png", mask_buffer.getvalue(), "image/png"),
+        },
+        data={"prompt": "Repair the marked area"},
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"] == "image/png"
+    assert response.content == output_bytes
+    assert len(requests) == 1
