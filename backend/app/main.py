@@ -423,6 +423,12 @@ def update_project_share(project_id: str, payload: ShareUpdate, user: User = Dep
     if not project:
         raise HTTPException(status_code=404, detail="Project not found.")
     if payload.enabled:
+        try:
+            saved_tour = json.loads(project.tour_json or "{}")
+        except json.JSONDecodeError:
+            saved_tour = {}
+        if not saved_tour.get("scenes"):
+            raise HTTPException(status_code=422, detail="Add at least one scene before enabling a public tour link.")
         project.share_token = project.share_token or uuid.uuid4().hex
         project.is_public = True
     else:
@@ -531,6 +537,9 @@ def save_project_tour(project_id: str, payload: TourPayload, user: User = Depend
         if {asset.id for asset in owned_assets} != media_ids:
             raise HTTPException(status_code=422, detail="A tour scene references media that is not in this project.")
     project.tour_json = payload.model_dump_json()
+    if not payload.scenes and project.is_public:
+        project.is_public = False
+        project.share_token = None
     project.updated_at = now_utc()
     db.commit()
     return payload.model_dump()
