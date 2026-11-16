@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import os
+import asyncio
+from collections import deque
+from time import monotonic
 import uuid
 import hashlib
 import secrets
@@ -12,18 +15,17 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Generator, Literal
 
-from fastapi import FastAPI, Depends, File, HTTPException, UploadFile, Header, Request, Body
+from fastapi import FastAPI, Depends, File, HTTPException, UploadFile, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, Response, JSONResponse
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker, Session
 import jwt
 import httpx
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
+from redis.asyncio import Redis
+from redis.exceptions import RedisError
 
 
 class Settings(BaseSettings):
@@ -93,10 +95,14 @@ class MediaAsset(Base):
     project: Mapped[Project] = relationship(back_populates="media")
 
 
-limiter = Limiter(key_func=get_remote_address, storage_uri=settings.rate_limit_storage_uri)
 app = FastAPI(title=settings.app_name, version="0.2.0")
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+rate_limit_redis = (
+    Redis.from_url(settings.rate_limit_storage_uri, decode_responses=True)
+    if settings.rate_limit_storage_uri.startswith(("redis://", "rediss://"))
+    else None
+)
+_rate_limit_events: dict[str, deque[float]] = {}
+_rate_limit_lock = asyncio.Lock()
 origins = [item.strip() for item in settings.frontend_origin.split(",") if item.strip()]
 app.add_middleware(
     CORSMiddleware,
@@ -105,6 +111,56 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def enforce_request_rate_limits(request: Request, call_next):
+    limits = {
+        ("POST", "/api/auth/register"): 10,
+        ("POST", "/api/auth/login"): 10,
+        ("POST", "/api/ai/assist"): 20,
+    }
+    limit = limits.get((request.method, request.url.path))
+    if limit is None:
+        return await call_next(request)
+
+    # X-Real-IP is set by the private Nginx reverse proxy in Docker deployments.
+    client_ip = request.headers.get("x-real-ip") or (request.client.host if request.client else "unknown")
+    key = f"s360:rate:{client_ip}:{request.url.path}"
+    count = None
+    if rate_limit_redis is not None:
+        try:
+            count = await rate_limit_redis.incr(key)
+            if count == 1:
+                await rate_limit_redis.expire(key, 60)
+        except RedisError:
+            count = None
+
+    if count is None:
+        now = monotonic()
+        async with _rate_limit_lock:
+            events = _rate_limit_events.setdefault(key, deque())
+            while events and events[0] <= now - 60:
+                events.popleft()
+            if len(events) >= limit:
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Too many requests. Please try again in a minute."},
+                    headers={"Retry-After": "60"},
+                )
+            events.append(now)
+            count = len(events)
+
+    if count > limit:
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Too many requests. Please try again in a minute."},
+            headers={"Retry-After": "60"},
+        )
+    response = await call_next(request)
+    response.headers["X-RateLimit-Limit"] = str(limit)
+    response.headers["X-RateLimit-Remaining"] = str(max(limit - count, 0))
+    return response
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -254,8 +310,7 @@ async def capabilities():
 
 
 @app.post("/api/auth/register", status_code=201)
-@limiter.limit("10/minute")
-def register(request: Request, response: Response, payload: RegisterPayload = Body(...), db: Session = Depends(get_db)):
+def register(payload: RegisterPayload, db: Session = Depends(get_db)):
     email = normalize_email(payload.email)
     if "@" not in email or "." not in email.rsplit("@", 1)[-1]:
         raise HTTPException(status_code=422, detail="Email manzilini to‘g‘ri kiriting.")
@@ -269,8 +324,7 @@ def register(request: Request, response: Response, payload: RegisterPayload = Bo
 
 
 @app.post("/api/auth/login")
-@limiter.limit("10/minute")
-def login(request: Request, response: Response, payload: LoginPayload = Body(...), db: Session = Depends(get_db)):
+def login(payload: LoginPayload, db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.email == normalize_email(payload.email)))
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Email yoki parol noto‘g‘ri.")
@@ -379,8 +433,7 @@ def ai_capabilities(user: User = Depends(current_user)):
 
 
 @app.post("/api/ai/assist")
-@limiter.limit("20/minute")
-async def ai_assist(request: Request, response: Response, payload: AIRequest = Body(...), user: User = Depends(current_user)):
+async def ai_assist(payload: AIRequest, user: User = Depends(current_user)):
     if not settings.ollama_base_url.strip():
         raise HTTPException(
             status_code=503,
