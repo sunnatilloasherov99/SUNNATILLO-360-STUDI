@@ -22,7 +22,25 @@ export default function MediaStudio({ token, language, projectId, projectName, p
  async function exportEditedImage(){if(!url||!meta||exporting)return;setExporting(true);setExportMessage("");try{const response=await fetch(url);if(!response.ok)throw new Error();const source=await createImageBitmap(await response.blob());const canvas=document.createElement("canvas");canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext("2d");if(!context)throw new Error();context.filter=`brightness(${settings.brightness}) contrast(${settings.contrast}) saturate(${settings.saturation})`;context.drawImage(source,0,0);source.close();let outputCanvas:HTMLCanvasElement=canvas;if(settings.seamOffset>0){const shift=Math.round(canvas.width*settings.seamOffset/360);const shifted=document.createElement("canvas");shifted.width=canvas.width;shifted.height=canvas.height;const shiftedContext=shifted.getContext("2d");if(!shiftedContext)throw new Error();shiftedContext.drawImage(canvas,-shift,0);shiftedContext.drawImage(canvas,canvas.width-shift,0);outputCanvas=shifted;}const output=await new Promise<Blob|null>(resolve=>outputCanvas.toBlob(resolve,"image/jpeg",0.95));if(!output)throw new Error();const outputUrl=URL.createObjectURL(output);const link=document.createElement("a");link.href=outputUrl;link.download=`${meta.name.replace(/\.[^.]+$/,"")}-edited.jpg`;document.body.appendChild(link);link.click();link.remove();window.setTimeout(()=>URL.revokeObjectURL(outputUrl),1000);setExportMessage(t.exported);}catch{setError(t.exportFailed);}finally{setExporting(false);}}
  useEffect(()=>{setUrl(null);setMeta(null);setAssets([]);setSettingsMessage("");if(projectId){void loadAssets(projectId);void loadEditorSettings(projectId);}},[projectId]);
  useEffect(()=>()=>{if(url?.startsWith("blob:"))URL.revokeObjectURL(url);},[url]);
- useEffect(()=>{if(!url||!host.current)return;const viewer=new Viewer({container:host.current,panorama:url,navbar:["zoom","move","fullscreen"]});return()=>viewer.destroy();},[url]);
+ useEffect(()=>{
+  let cancelled=false;let generatedUrl:string|null=null;
+  if(!url||settings.seamOffset===0){setPreviewUrl(null);return;}
+  const image=new Image();
+  image.onload=()=>{
+   const canvas=document.createElement("canvas");canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+   const context=canvas.getContext("2d");if(!context)return;
+   const shift=Math.round(canvas.width*settings.seamOffset/360);
+   context.drawImage(image,-shift,0);context.drawImage(image,canvas.width-shift,0);
+   canvas.toBlob(blob=>{
+    if(cancelled||!blob)return;
+    generatedUrl=URL.createObjectURL(blob);setPreviewUrl(generatedUrl);
+   },"image/jpeg",0.95);
+  };
+  image.onerror=()=>{if(!cancelled)setError(t.readError);};
+  image.src=url;
+  return()=>{cancelled=true;if(generatedUrl)URL.revokeObjectURL(generatedUrl);};
+ },[url,settings.seamOffset]);
+ useEffect(()=>{if(!url||!host.current)return;const viewer=new Viewer({container:host.current,panorama:previewUrl||url,navbar:["zoom","move","fullscreen"]});return()=>viewer.destroy();},[url,previewUrl]);
  useEffect(()=>{if(host.current)host.current.style.filter=`brightness(${settings.brightness}) contrast(${settings.contrast}) saturate(${settings.saturation})`;},[settings,url]);
  async function showAsset(asset:Asset){try{const response=await fetch(asset.url,{headers:{Authorization:`Bearer ${token}`}});if(!response.ok)throw new Error();const blob=await response.blob();const fileUrl=URL.createObjectURL(blob);const image=new Image();image.onload=()=>{setMeta({width:image.naturalWidth,height:image.naturalHeight,name:asset.name});setUrl(fileUrl);setSaved(true);setError("");};image.onerror=()=>{URL.revokeObjectURL(fileUrl);setError(t.readError);};image.src=fileUrl;}catch{setError(t.failed);}}
  async function choose(file?:File){
