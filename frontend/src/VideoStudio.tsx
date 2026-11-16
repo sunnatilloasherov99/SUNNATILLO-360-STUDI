@@ -93,6 +93,8 @@ export default function VideoStudio({token,language,projectId,projectName,projec
   if(!projectId||!activeAsset||exporting)return;
   setExporting(true);setExportMessage("");
   try{
+   const settingsResponse=await fetch(`/api/projects/${projectId}/video-settings`,{method:"PUT",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({start_seconds:trimStart,end_seconds:trimEnd})});
+   if(!settingsResponse.ok)throw new Error();
    const response=await fetch(`/api/projects/${projectId}/video-export`,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({media_id:activeAsset.id})});
    if(!response.ok)throw new Error();
    const blob=await response.blob();
