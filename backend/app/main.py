@@ -4,6 +4,7 @@ import os
 import uuid
 import hashlib
 import secrets
+import json
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Generator
@@ -63,6 +64,7 @@ class Project(Base):
     mode: Mapped[str] = mapped_column(String(16), nullable=False, default="manual")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    edit_settings_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
     media: Mapped[list["MediaAsset"]] = relationship(back_populates="project", cascade="all, delete-orphan")
 
 
@@ -85,6 +87,8 @@ with engine.begin() as connection:
     columns = {column["name"] for column in inspect(engine).get_columns("projects")}
     if "owner_id" not in columns:
         connection.execute(text("ALTER TABLE projects ADD COLUMN owner_id VARCHAR(36)"))
+    if "edit_settings_json" not in columns:
+        connection.execute(text("ALTER TABLE projects ADD COLUMN edit_settings_json TEXT NOT NULL DEFAULT '{}'"))
     connection.execute(text("CREATE INDEX IF NOT EXISTS ix_projects_owner_id ON projects (owner_id)"))
 
 app = FastAPI(title=settings.app_name, version="0.2.0")
@@ -155,6 +159,12 @@ def current_user(authorization: str | None = Header(default=None), db: Session =
     if not user:
         raise HTTPException(status_code=401, detail="Kirish muddati tugagan yoki token noto‘g‘ri.")
     return user
+
+
+class EditorSettings(BaseModel):
+    brightness: float = Field(default=1.0, ge=0.5, le=1.5)
+    contrast: float = Field(default=1.0, ge=0.5, le=1.5)
+    saturation: float = Field(default=1.0, ge=0.0, le=2.0)
 
 
 class ProjectCreate(BaseModel):
@@ -253,6 +263,28 @@ def create_project(payload: ProjectCreate, user: User = Depends(current_user), d
     db.commit()
     db.refresh(project)
     return project_data(project)
+
+
+@app.get("/api/projects/{project_id}/editor-settings")
+def get_editor_settings(project_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    try:
+        return json.loads(project.edit_settings_json or "{}")
+    except json.JSONDecodeError:
+        return {"brightness": 1.0, "contrast": 1.0, "saturation": 1.0}
+
+
+@app.put("/api/projects/{project_id}/editor-settings")
+def save_editor_settings(project_id: str, payload: EditorSettings, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    project.edit_settings_json = payload.model_dump_json()
+    project.updated_at = now_utc()
+    db.commit()
+    return payload.model_dump()
 
 
 @app.delete("/api/projects/{project_id}", status_code=204)
