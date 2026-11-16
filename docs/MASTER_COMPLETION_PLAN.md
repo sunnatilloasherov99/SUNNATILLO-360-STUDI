@@ -44,6 +44,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] Tuzatish qatlamini asl faylga tegmasdan yangi hosila media eksportiga qo‘shildi.
 - [x] Panorama almashtirilganda clone brush manbasi, undo/redo tarixi va faol pointer chizishi tozalanadi; pointer capture yo‘qolganda ham chizish holati yopiladi (commit `3b9b5e6`).
 - [x] AI maska cho‘tkasida pointer capture yo‘qolsa, faol chizish holati ham darhol yopiladi (commit `3b005c3`).
+- [x] AI maska cho‘tkasi tez harakatda uzilib qolmasligi uchun pointer nuqtalari orasidagi chiziqlar interpolatsiya qilinadi; pointer tugaganda yoki yo‘qolganda yo‘l holati tozalanadi (commit `5227dc5`).
 - [x] Keshlangan rasm tez yuklanganda ham clone canvas o‘lchamlari to‘g‘ri boshlanishi uchun `complete/naturalWidth` holati tekshiriladi (commit `c8d61ae`).
 - [x] CI run 43918087957: frontend build, backend testlari va Docker/infratuzilma tekshiruvlari muvaffaqiyatli.
 
