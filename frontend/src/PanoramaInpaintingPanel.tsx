@@ -75,6 +75,14 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
   useEffect(() => {
     let active = true;
     requestVersion.current += 1;
+    // Do not leave the previous panorama's dimensions or mask interactive
+    // while the replacement image is still loading.
+    setDimensions({ width: 0, height: 0 });
+    const existingCanvas = canvasRef.current;
+    if (existingCanvas) {
+      existingCanvas.width = 0;
+      existingCanvas.height = 0;
+    }
     const image = new Image();
     image.onload = () => {
       if (!active) return;
