@@ -17,7 +17,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Generator, Literal
 
-from fastapi import FastAPI, Depends, File, HTTPException, UploadFile, Header, Request
+from fastapi import FastAPI, Depends, File, Form, HTTPException, UploadFile, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response, JSONResponse
 from starlette.background import BackgroundTask
@@ -101,6 +101,7 @@ class MediaAsset(Base):
     content_type: Mapped[str] = mapped_column(String(100), nullable=False)
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    source_asset_id: Mapped[str | None] = mapped_column(ForeignKey("media_assets.id", ondelete="SET NULL"), nullable=True, index=True)
     project: Mapped[Project] = relationship(back_populates="media")
 
 
@@ -337,6 +338,7 @@ def media_data(asset: MediaAsset) -> dict:
         "contentType": asset.content_type,
         "sizeBytes": asset.size_bytes,
         "createdAt": asset.created_at.isoformat(),
+        "sourceAssetId": asset.source_asset_id,
         "url": f"/api/media/{asset.id}/file",
     }
 
@@ -1141,12 +1143,17 @@ def list_project_media(project_id: str, user: User = Depends(current_user), db: 
 async def upload_project_media(
     project_id: str,
     file: UploadFile = File(...),
+    source_asset_id: str | None = Form(None),
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
     project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
     if not project:
         raise HTTPException(status_code=404, detail="Project not found.")
+    if source_asset_id:
+        source_asset = db.scalar(select(MediaAsset).where(MediaAsset.id == source_asset_id, MediaAsset.project_id == project_id))
+        if not source_asset:
+            raise HTTPException(status_code=422, detail="Source media must belong to this project.")
 
     allowed_types = {
         "image/jpeg": ".jpg",
@@ -1203,6 +1210,7 @@ async def upload_project_media(
         content_type=file.content_type or "application/octet-stream",
         size_bytes=total,
         created_at=now_utc(),
+        source_asset_id=source_asset_id,
     )
     project.updated_at = now_utc()
     db.add(asset)
