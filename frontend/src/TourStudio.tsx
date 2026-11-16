@@ -5,7 +5,7 @@ import "@photo-sphere-viewer/core/index.css";
 import "@photo-sphere-viewer/markers-plugin/index.css";
 
 type Language = "uz" | "ru" | "en";
-type Asset = { id: string; name: string; sizeBytes: number; url: string };
+type Asset = { id: string; name: string; contentType: string; sizeBytes: number; url: string };
 type Hotspot = { target_scene_id: string; title: string; yaw: number; pitch: number };
 type Scene = { id: string; media_id: string; title: string; description: string; hotspots: Hotspot[] };
 type Tour = { title: string; description: string; scenes: Scene[] };
