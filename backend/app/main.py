@@ -2,17 +2,20 @@ from __future__ import annotations
 
 import os
 import uuid
-from datetime import datetime, timezone
+import hashlib
+import secrets
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Generator
 
-from fastapi import FastAPI, Depends, File, HTTPException, UploadFile
+from fastapi import FastAPI, Depends, File, HTTPException, UploadFile, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, create_engine, select
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, create_engine, select, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker, Session
+import jwt
 
 
 class Settings(BaseSettings):
@@ -22,6 +25,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./studio.db"
     media_storage_path: str = "./data/media"
     max_upload_mb: int = 100
+    jwt_secret: str = "CHANGE-ME-IN-PRODUCTION"
+    token_expire_hours: int = 24
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
@@ -38,10 +43,20 @@ class Base(DeclarativeBase):
     pass
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    email: Mapped[str] = mapped_column(String(254), unique=True, index=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(256), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class Project(Base):
     __tablename__ = "projects"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    owner_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
     name: Mapped[str] = mapped_column(String(160), nullable=False)
     mode: Mapped[str] = mapped_column(String(16), nullable=False, default="manual")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -63,6 +78,12 @@ class MediaAsset(Base):
 
 
 Base.metadata.create_all(bind=engine)
+# Upgrade existing development databases without losing projects.
+with engine.begin() as connection:
+    columns = {column["name"] for column in inspect(engine).get_columns("projects")}
+    if "owner_id" not in columns:
+        connection.execute(text("ALTER TABLE projects ADD COLUMN owner_id VARCHAR(36)"))
+    connection.execute(text("CREATE INDEX IF NOT EXISTS ix_projects_owner_id ON projects (owner_id)"))
 
 app = FastAPI(title=settings.app_name, version="0.2.0")
 origins = [item.strip() for item in settings.frontend_origin.split(",") if item.strip()]
@@ -85,6 +106,53 @@ def get_db() -> Generator[Session, None, None]:
 
 def now_utc() -> datetime:
     return datetime.now(timezone.utc)
+
+
+class RegisterPayload(BaseModel):
+    email: str = Field(min_length=5, max_length=254)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class LoginPayload(BaseModel):
+    email: str = Field(min_length=5, max_length=254)
+    password: str = Field(min_length=1, max_length=128)
+
+
+def normalize_email(value: str) -> str:
+    return value.strip().lower()
+
+
+def hash_password(password: str, salt: str | None = None) -> str:
+    salt = salt or secrets.token_hex(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), bytes.fromhex(salt), 310000)
+    return f"{salt}${digest.hex()}"
+
+
+def verify_password(password: str, stored: str) -> bool:
+    try:
+        salt, expected = stored.split("$", 1)
+        actual = hash_password(password, salt).split("$", 1)[1]
+        return secrets.compare_digest(actual, expected)
+    except (ValueError, TypeError):
+        return False
+
+
+def issue_token(user: User) -> str:
+    return jwt.encode({"sub": user.id, "exp": now_utc() + timedelta(hours=settings.token_expire_hours)}, settings.jwt_secret, algorithm="HS256")
+
+
+def current_user(authorization: str | None = Header(default=None), db: Session = Depends(get_db)) -> User:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Tizimga kirish talab qilinadi.")
+    token = authorization[7:].strip()
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+        user = db.get(User, payload.get("sub"))
+    except jwt.PyJWTError:
+        user = None
+    if not user:
+        raise HTTPException(status_code=401, detail="Kirish muddati tugagan yoki token noto‘g‘ri.")
+    return user
 
 
 class ProjectCreate(BaseModel):
@@ -132,18 +200,46 @@ async def capabilities():
     }
 
 
+@app.post("/api/auth/register", status_code=201)
+def register(payload: RegisterPayload, db: Session = Depends(get_db)):
+    email = normalize_email(payload.email)
+    if "@" not in email or "." not in email.rsplit("@", 1)[-1]:
+        raise HTTPException(status_code=422, detail="Email manzilini to‘g‘ri kiriting.")
+    if db.scalar(select(User).where(User.email == email)):
+        raise HTTPException(status_code=409, detail="Bu email bilan hisob mavjud.")
+    user = User(id=str(uuid.uuid4()), email=email, password_hash=hash_password(payload.password), created_at=now_utc())
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return {"access_token": issue_token(user), "token_type": "bearer", "user": {"id": user.id, "email": user.email}}
+
+
+@app.post("/api/auth/login")
+def login(payload: LoginPayload, db: Session = Depends(get_db)):
+    user = db.scalar(select(User).where(User.email == normalize_email(payload.email)))
+    if not user or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Email yoki parol noto‘g‘ri.")
+    return {"access_token": issue_token(user), "token_type": "bearer", "user": {"id": user.id, "email": user.email}}
+
+
+@app.get("/api/auth/me")
+def who_am_i(user: User = Depends(current_user)):
+    return {"id": user.id, "email": user.email}
+
+
 @app.get("/api/projects")
-def list_projects(db: Session = Depends(get_db)):
-    projects = db.scalars(select(Project).order_by(Project.updated_at.desc())).all()
+def list_projects(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    projects = db.scalars(select(Project).where(Project.owner_id == user.id).order_by(Project.updated_at.desc())).all()
     return [project_data(project) for project in projects]
 
 
 @app.post("/api/projects", status_code=201)
-def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
+def create_project(payload: ProjectCreate, user: User = Depends(current_user), db: Session = Depends(get_db)):
     if db.get(Project, payload.id):
         raise HTTPException(status_code=409, detail="A project with this ID already exists.")
     project = Project(
         id=payload.id,
+        owner_id=user.id,
         name=payload.name.strip(),
         mode=payload.mode,
         created_at=now_utc(),
@@ -158,8 +254,8 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
 
 
 @app.delete("/api/projects/{project_id}", status_code=204)
-def delete_project(project_id: str, db: Session = Depends(get_db)):
-    project = db.get(Project, project_id)
+def delete_project(project_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
     if not project:
         raise HTTPException(status_code=404, detail="Project not found.")
     stored_names = [asset.stored_name for asset in project.media]
@@ -171,8 +267,8 @@ def delete_project(project_id: str, db: Session = Depends(get_db)):
 
 
 @app.get("/api/projects/{project_id}/media")
-def list_project_media(project_id: str, db: Session = Depends(get_db)):
-    if not db.get(Project, project_id):
+def list_project_media(project_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    if not db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id)):
         raise HTTPException(status_code=404, detail="Project not found.")
     assets = db.scalars(
         select(MediaAsset).where(MediaAsset.project_id == project_id).order_by(MediaAsset.created_at.desc())
@@ -184,9 +280,10 @@ def list_project_media(project_id: str, db: Session = Depends(get_db)):
 async def upload_project_media(
     project_id: str,
     file: UploadFile = File(...),
+    user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    project = db.get(Project, project_id)
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
     if not project:
         raise HTTPException(status_code=404, detail="Project not found.")
 
@@ -250,8 +347,8 @@ async def upload_project_media(
 
 
 @app.get("/api/media/{asset_id}/file")
-def get_media_file(asset_id: str, db: Session = Depends(get_db)):
-    asset = db.get(MediaAsset, asset_id)
+def get_media_file(asset_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    asset = db.scalar(select(MediaAsset).join(Project).where(MediaAsset.id == asset_id, Project.owner_id == user.id))
     if not asset:
         raise HTTPException(status_code=404, detail="Media file not found.")
     path = storage_dir / asset.stored_name
