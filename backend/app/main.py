@@ -203,12 +203,15 @@ async def upload_project_media(
     stored_name = f"{asset_id}{extension}"
     destination = storage_dir / stored_name
     total = 0
+    header = bytearray()
     try:
         with destination.open("wb") as output:
             while chunk := await file.read(1024 * 1024):
                 total += len(chunk)
                 if total > settings.max_upload_mb * 1024 * 1024:
                     raise HTTPException(status_code=413, detail=f"File exceeds the {settings.max_upload_mb} MB limit.")
+                if len(header) < 12:
+                    header.extend(chunk[: 12 - len(header)])
                 output.write(chunk)
     except Exception:
         destination.unlink(missing_ok=True)
@@ -220,10 +223,20 @@ async def upload_project_media(
         destination.unlink(missing_ok=True)
         raise HTTPException(status_code=400, detail="The uploaded file is empty.")
 
+    signatures = {
+        "image/jpeg": lambda data: data.startswith(b"\\xff\\xd8\\xff"),
+        "image/png": lambda data: data.startswith(b"\\x89PNG\\r\\n\\x1a\\n"),
+        "image/webp": lambda data: len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP",
+    }
+    if not signatures[file.content_type or ""](bytes(header)):
+        destination.unlink(missing_ok=True)
+        raise HTTPException(status_code=415, detail="The file content does not match its declared image type.")
+
+    safe_original_name = (file.filename or f"panorama{extension}").replace("\\\\", "/").split("/")[-1][:255]
     asset = MediaAsset(
         id=asset_id,
         project_id=project_id,
-        original_name=Path(file.filename or f"panorama{extension}").name[:255],
+        original_name=safe_original_name,
         stored_name=stored_name,
         content_type=file.content_type or "application/octet-stream",
         size_bytes=total,
@@ -244,4 +257,4 @@ def get_media_file(asset_id: str, db: Session = Depends(get_db)):
     path = storage_dir / asset.stored_name
     if not path.is_file():
         raise HTTPException(status_code=404, detail="Stored media file is missing.")
-    return FileResponse(path, media_type=asset.content_type, filename=asset.original_name)
+    return FileResponse(path, media_type=asset.content_type, headers={"Content-Disposition": "inline", "X-Content-Type-Options": "nosniff"})
