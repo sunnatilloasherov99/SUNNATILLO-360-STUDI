@@ -8,7 +8,7 @@ import secrets
 import json
 import base64
 import shutil
-import subprocess
+import tempfile
 from io import BytesIO
 from zipfile import ZIP_DEFLATED, ZipFile
 from PIL import Image, UnidentifiedImageError
@@ -714,29 +714,76 @@ def ai_capabilities(user: User = Depends(current_user)):
 
 @app.post("/api/ai/assist")
 async def ai_assist(payload: AIRequest, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    image_base64 = None
+    image_base64s: list[str] = []
+    video_analyzed = False
     if payload.media_id:
         asset = db.scalar(
             select(MediaAsset).join(Project).where(
                 MediaAsset.id == payload.media_id,
                 Project.owner_id == user.id,
-                MediaAsset.content_type.like("image/%"),
             )
         )
         if not asset:
-            raise HTTPException(status_code=404, detail="Selected image was not found in your projects.")
-        image_path = storage_dir / asset.stored_name
-        if not image_path.is_file():
-            raise HTTPException(status_code=404, detail="Selected image file is missing.")
-        if image_path.stat().st_size > 12 * 1024 * 1024:
-            raise HTTPException(status_code=413, detail="Choose an image smaller than 12 MB for local AI analysis.")
-        image_bytes = image_path.read_bytes()
-        try:
-            with Image.open(image_path) as image:
-                image.verify()
-        except (UnidentifiedImageError, OSError, ValueError):
-            raise HTTPException(status_code=422, detail="Selected image is invalid or cannot be decoded.")
-        image_base64 = base64.b64encode(image_bytes).decode("ascii")
+            raise HTTPException(status_code=404, detail="Selected media was not found in your projects.")
+        media_path = storage_dir / asset.stored_name
+        if not media_path.is_file():
+            raise HTTPException(status_code=404, detail="Selected media file is missing.")
+        if asset.size_bytes > 100 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Choose media smaller than 100 MB for local AI analysis.")
+        if asset.content_type.startswith("image/"):
+            if asset.size_bytes > 12 * 1024 * 1024:
+                raise HTTPException(status_code=413, detail="Choose an image smaller than 12 MB for local AI analysis.")
+            image_bytes = media_path.read_bytes()
+            try:
+                with Image.open(media_path) as image:
+                    image.verify()
+            except (UnidentifiedImageError, OSError, ValueError):
+                raise HTTPException(status_code=422, detail="Selected image is invalid or cannot be decoded.")
+            image_base64s.append(base64.b64encode(image_bytes).decode("ascii"))
+        elif asset.content_type.startswith("video/"):
+            ffmpeg = shutil.which("ffmpeg")
+            ffprobe = shutil.which("ffprobe")
+            if not ffmpeg or not ffprobe:
+                raise HTTPException(status_code=503, detail="Video analysis requires FFmpeg on the server.")
+            try:
+                probe = await asyncio.create_subprocess_exec(
+                    ffprobe, "-v", "error", "-show_entries", "format=duration",
+                    "-of", "default=noprint_wrappers=1:nokey=1", str(media_path),
+                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+                )
+                probe_out, _ = await asyncio.wait_for(probe.communicate(), timeout=20)
+                duration = float(probe_out.decode("utf-8").strip()) if probe.returncode == 0 else 0
+            except (OSError, asyncio.TimeoutError, ValueError, UnicodeDecodeError):
+                raise HTTPException(status_code=422, detail="The selected video could not be inspected.")
+            if duration <= 0 or duration > 1800:
+                raise HTTPException(status_code=422, detail="AI video analysis supports videos up to 30 minutes.")
+            with tempfile.TemporaryDirectory(prefix="ai-frames-", dir=storage_dir) as frame_dir:
+                for index, fraction in enumerate((0.1, 0.5, 0.9)):
+                    timestamp = min(duration * fraction, max(duration - 0.05, 0))
+                    frame_path = Path(frame_dir) / f"frame-{index}.jpg"
+                    try:
+                        process = await asyncio.create_subprocess_exec(
+                            ffmpeg, "-nostdin", "-hide_banner", "-loglevel", "error",
+                            "-ss", f"{timestamp:.3f}", "-i", str(media_path),
+                            "-frames:v", "1", "-vf", "scale='min(1280,iw)':-2",
+                            "-q:v", "4", str(frame_path),
+                            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE,
+                        )
+                        _, _ = await asyncio.wait_for(process.communicate(), timeout=30)
+                    except (OSError, asyncio.TimeoutError):
+                        raise HTTPException(status_code=422, detail="Could not extract video frames for AI analysis.")
+                    if process.returncode != 0 or not frame_path.is_file():
+                        raise HTTPException(status_code=422, detail="Could not extract video frames for AI analysis.")
+                    frame_bytes = frame_path.read_bytes()
+                    try:
+                        with Image.open(frame_path) as frame:
+                            frame.verify()
+                    except (UnidentifiedImageError, OSError, ValueError):
+                        raise HTTPException(status_code=422, detail="The video produced an invalid analysis frame.")
+                    image_base64s.append(base64.b64encode(frame_bytes).decode("ascii"))
+            video_analyzed = True
+        else:
+            raise HTTPException(status_code=415, detail="AI analysis supports uploaded images and videos only.")
     if not settings.ollama_base_url.strip():
         raise HTTPException(
             status_code=503,
@@ -746,10 +793,14 @@ async def ai_assist(payload: AIRequest, user: User = Depends(current_user), db: 
     user_content = payload.prompt.strip()
     if payload.context.strip():
         user_content += "\n\nUser-provided context (only this text was shared):\n" + payload.context.strip()
+    attachment_note = (
+        "\n\nPlease inspect the three extracted keyframes from the supplied video in chronological order."
+        if video_analyzed else "\n\nPlease inspect the attached image." if image_base64s else ""
+    )
     user_message = {
         "role": "user",
-        "content": user_content + ("\n\nPlease inspect the attached image." if image_base64 else ""),
-        **({"images": [image_base64]} if image_base64 else {}),
+        "content": user_content + attachment_note,
+        **({"images": image_base64s} if image_base64s else {}),
     }
     url = settings.ollama_base_url.rstrip("/") + "/api/chat"
     try:
@@ -804,8 +855,15 @@ async def ai_assist(payload: AIRequest, user: User = Depends(current_user), db: 
         raise HTTPException(status_code=503, detail="Could not connect to the local Ollama service.")
     if not output:
         raise HTTPException(status_code=502, detail="The local AI service returned an empty response.")
-    return {"provider": "ollama", "model": settings.ollama_model, "role": payload.role, "output": output, "image_analyzed": bool(image_base64)}
-
+    return {
+        "provider": "ollama",
+        "model": settings.ollama_model,
+        "role": payload.role,
+        "output": output,
+        "image_analyzed": bool(image_base64s) and not video_analyzed,
+        "video_analyzed": video_analyzed,
+        "frames_analyzed": len(image_base64s),
+    }
 
 
 @app.get("/api/projects/{project_id}/quality")
