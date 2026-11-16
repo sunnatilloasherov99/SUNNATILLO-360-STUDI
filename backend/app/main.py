@@ -252,6 +252,11 @@ class EditorSettings(BaseModel):
     seam_offset: int = Field(default=0, ge=0, le=359)
 
 
+class VideoTrimSettings(BaseModel):
+    start_seconds: float = Field(default=0.0, ge=0.0, le=86400.0)
+    end_seconds: float = Field(default=0.0, ge=0.0, le=86400.0)
+
+
 class AIRequest(BaseModel):
     role: Literal["panorama_quality", "tour_planner", "tour_description", "stitching_advisor", "collaboration"]
     prompt: str = Field(min_length=1, max_length=4000)
@@ -429,6 +434,36 @@ def save_editor_settings(project_id: str, payload: EditorSettings, user: User = 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found.")
     project.edit_settings_json = payload.model_dump_json()
+    project.updated_at = now_utc()
+    db.commit()
+    return payload.model_dump()
+
+
+@app.get("/api/projects/{project_id}/video-settings")
+def get_video_settings(project_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    try:
+        saved = json.loads(project.edit_settings_json or "{}").get("video", {})
+    except (json.JSONDecodeError, AttributeError):
+        saved = {}
+    return VideoTrimSettings.model_validate(saved).model_dump()
+
+
+@app.put("/api/projects/{project_id}/video-settings")
+def save_video_settings(project_id: str, payload: VideoTrimSettings, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    if payload.end_seconds and payload.end_seconds <= payload.start_seconds:
+        raise HTTPException(status_code=422, detail="End time must be greater than start time.")
+    try:
+        saved = json.loads(project.edit_settings_json or "{}")
+    except json.JSONDecodeError:
+        saved = {}
+    saved["video"] = payload.model_dump()
+    project.edit_settings_json = json.dumps(saved)
     project.updated_at = now_utc()
     db.commit()
     return payload.model_dump()
