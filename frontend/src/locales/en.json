@@ -29,5 +29,13 @@
   "noProjects": "No projects yet",
   "projectCreated": "Project created",
   "privacyNote": "Files and screen content are shared with external AI services only with your separate permission.",
-  "modeRequired": "Choose a startup mode first"
+  "modeRequired": "Choose a startup mode first",
+  "studio": "STUDIO",
+  "projectWorkflow": "PROJECT WORKFLOW",
+  "selected": "SELECTED",
+  "selectMode": "SELECT MODE",
+  "activeProject": "ACTIVE PROJECT",
+  "yourWork": "YOUR WORK",
+  "portableTag": "INDEPENDENT · PORTABLE · SECURE",
+  "immersiveTag": "360° IMMERSIVE"
 }
