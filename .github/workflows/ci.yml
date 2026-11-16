@@ -91,3 +91,5 @@ jobs:
         run: docker compose --env-file infra/.env -f infra/docker-compose.yml build api web
       - name: Validate Nginx configuration
         run: docker run --rm --add-host api:127.0.0.1 infra-web:latest nginx -t
+      - name: Validate Caddy HTTPS configuration
+        run: docker compose --profile production --env-file infra/.env -f infra/docker-compose.yml run --rm --no-deps caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
