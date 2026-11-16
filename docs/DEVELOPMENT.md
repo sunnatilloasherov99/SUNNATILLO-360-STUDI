@@ -45,7 +45,7 @@ cd infra
 docker compose up -d --build
 ```
 
-The API container runs `alembic upgrade head` before starting FastAPI. Docker Compose also starts a private Redis service for shared request rate limits; local development defaults to in-memory limits. PostgreSQL and media files use separate persistent Docker volumes.
+The API container runs `alembic upgrade head` before starting FastAPI. After deployment over HTTPS, desktop users can install the PWA from the browser's address-bar install icon or browser menu; mobile users can use Add to Home Screen. Docker Compose also starts a private Redis service for shared request rate limits; local development defaults to in-memory limits. PostgreSQL and media files use separate persistent Docker volumes.
 
 ### Backup and restore
 Run these from the `infra/` directory on a Linux host with Docker Compose:
