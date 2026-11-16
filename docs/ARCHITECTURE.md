@@ -11,6 +11,8 @@
 ## Media safety and privacy
 - Imported originals are immutable.
 - Initial panorama adjustments (brightness, contrast and saturation) are stored as project settings and previewed non-destructively; they do not overwrite source files.
+- Edited images are exported as new JPEG files; uploaded originals remain untouched.
+- Multi-scene tour configuration, scene order and scene-to-scene hotspot links are stored per project and validated against media owned by that project.
 - Edits are represented as project instructions and metadata, then rendered to new output files.
 - AI suggestions are proposals; applying them requires explicit user approval.
 - External AI receives only the minimum selected context after explicit user consent.
