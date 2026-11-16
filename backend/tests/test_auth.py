@@ -225,3 +225,14 @@ def test_local_ai_is_opt_in_and_requires_authentication(client: TestClient) -> N
         json={"role": "tour_planner", "prompt": "Plan a small tour", "language": "en"},
     )
     assert unavailable.status_code == 503
+
+
+def test_login_rate_limit_returns_429(client: TestClient) -> None:
+    headers = {"X-Real-IP": "198.51.100.77"}
+    payload = {"email": "nobody@example.com", "password": "wrong-password"}
+    for _ in range(10):
+        response = client.post("/api/auth/login", headers=headers, json=payload)
+        assert response.status_code == 401
+    limited = client.post("/api/auth/login", headers=headers, json=payload)
+    assert limited.status_code == 429
+    assert limited.headers["retry-after"] == "60"
