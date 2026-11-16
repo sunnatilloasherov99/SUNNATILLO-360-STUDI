@@ -23,7 +23,7 @@ const copy = {
   save:"Turni saqlash", saving:"Saqlanmoqda…", saved:"Tur saqlandi", export:"Loyihani ZIP shaklida eksport qilish", exporting:"Eksport qilinmoqda…", exported:"Loyiha ZIP fayli yuklab olindi", preview:"360° ko‘rib chiqish",
   chooseScene:"Ko‘rish uchun sahnani tanlang", needTwo:"Nuqta qo‘shish uchun kamida 2 ta sahna kerak.",
   loadError:"Turni yoki media fayllarni yuklab bo‘lmadi.", saveError:"Turni saqlab bo‘lmadi.",
-  markerHelp:"Nuqtani panoramada kerakli tomonga qarab turgan paytingizda qo‘shing. Burchaklarni gradusda kiriting.", quality:"Loyiha sifatini tekshirish",checking:"Tekshirilmoqda…",qualityReport:"Sifat hisoboti",
+  markerHelp:"Nuqtani panoramada kerakli tomonga qarab turgan paytingizda qo‘shing. Burchaklarni gradusda kiriting.", quality:"Loyiha sifatini tekshirish",checking:"Tekshirilmoqda…",qualityReport:"Sifat hisoboti",qualitySeamContinuity:"{name}: chap va o‘ng chetlar farqi {score}/255 ({level}).",
   qualityNoMedia:"Hali panorama yuklanmagan.",qualityVideoPending:"{name}: video sifati hozircha tekshirilmaydi.",qualityMissingFile:"{name}: asl fayl topilmadi.",qualityInvalidImage:"{name}: rasmni ochib bo‘lmadi.",qualityAspectRatio:"{name}: {width}×{height}, nisbat {ratio}:1.",qualityResolutionGood:"{name}: tavsiya etilgan aniqlik yetarli.",qualityResolutionLow:"{name}: kenglik 4000 px dan kichik.",qualityFormat:"{name}: format {format}.",qualityTourJson:"Virtual tur sozlamalarini o‘qib bo‘lmadi.",qualityNoScenes:"Virtual turda hali sahnalar yo‘q.",qualitySceneCount:"Virtual turda {count} ta sahna bor.",qualitySceneMedia:"{scene}: sahnada yaroqsiz panorama bor.",qualityBrokenHotspot:"{scene}: nuqta noto‘g‘ri sahnaga ulangan.",enableShare:"Ommaviy havolani yoqish",disableShare:"Ommaviy havolani o‘chirish",shareActive:"Ommaviy tur havolasi faol",shareInactive:"Ommaviy havola o‘chirildi",shareHint:"Havolaga ega har kim virtual turni ko‘ra oladi. Istalgan payt o‘chirishingiz mumkin.",copyShare:"Nusxalash",copied:"Havola nusxalandi",
   emptyHotspots:"Bu sahnada interaktiv nuqtalar yo‘q."
  },
@@ -36,7 +36,7 @@ const copy = {
   save:"Сохранить тур", saving:"Сохранение…", saved:"Тур сохранён", export:"Экспортировать проект в ZIP", exporting:"Экспорт…", exported:"ZIP-архив проекта скачан", preview:"Просмотр 360°",
   chooseScene:"Выберите сцену для просмотра", needTwo:"Для добавления точки нужно минимум 2 сцены.",
   loadError:"Не удалось загрузить тур или медиафайлы.", saveError:"Не удалось сохранить тур.",
-  markerHelp:"Добавляйте точку, когда панорама направлена в нужную сторону. Углы вводятся в градусах.", quality:"Проверить качество проекта",checking:"Проверка…",qualityReport:"Отчёт о качестве",
+  markerHelp:"Добавляйте точку, когда панорама направлена в нужную сторону. Углы вводятся в градусах.", quality:"Проверить качество проекта",checking:"Проверка…",qualityReport:"Отчёт о качестве",qualitySeamContinuity:"{name}: разница левого и правого краёв {score}/255 ({level}).",
   qualityNoMedia:"Панорамы ещё не загружены.",qualityVideoPending:"{name}: проверка качества видео пока недоступна.",qualityMissingFile:"{name}: оригинальный файл не найден.",qualityInvalidImage:"{name}: изображение не удалось открыть.",qualityAspectRatio:"{name}: {width}×{height}, соотношение {ratio}:1.",qualityResolutionGood:"{name}: рекомендуемое разрешение достигнуто.",qualityResolutionLow:"{name}: ширина меньше 4000 пикселей.",qualityFormat:"{name}: формат {format}.",qualityTourJson:"Не удалось прочитать настройки тура.",qualityNoScenes:"В туре пока нет сцен.",qualitySceneCount:"В туре {count} сцен(ы).",qualitySceneMedia:"{scene}: у сцены отсутствует корректная панорама.",qualityBrokenHotspot:"{scene}: точка ведёт к несуществующей сцене.",enableShare:"Включить публичную ссылку",disableShare:"Отключить публичную ссылку",shareActive:"Публичная ссылка активна",shareInactive:"Публичная ссылка отключена",shareHint:"Любой, у кого есть ссылка, сможет просмотреть тур. Вы можете отключить её в любое время.",copyShare:"Копировать",copied:"Ссылка скопирована",
   emptyHotspots:"В этой сцене пока нет интерактивных точек."
  },
@@ -49,7 +49,7 @@ const copy = {
   save:"Save tour", saving:"Saving…", saved:"Tour saved", export:"Export project as ZIP", exporting:"Exporting…", exported:"Project ZIP downloaded", preview:"360° preview",
   chooseScene:"Choose a scene to preview", needTwo:"At least 2 scenes are needed to add a hotspot.",
   loadError:"Could not load the tour or media files.", saveError:"Could not save the tour.",
-  markerHelp:"Add a hotspot while the panorama is facing the desired direction. Enter angles in degrees.", quality:"Run project quality check",checking:"Checking…",qualityReport:"Quality report",
+  markerHelp:"Add a hotspot while the panorama is facing the desired direction. Enter angles in degrees.", quality:"Run project quality check",checking:"Checking…",qualityReport:"Quality report",qualitySeamContinuity:"{name}: left/right edge colour difference {score}/255 ({level}).",
   qualityNoMedia:"No panoramas have been uploaded yet.",qualityVideoPending:"{name}: video quality checks are not available yet.",qualityMissingFile:"{name}: original file is missing.",qualityInvalidImage:"{name}: the image could not be decoded.",qualityAspectRatio:"{name}: {width}×{height}, aspect ratio {ratio}:1.",qualityResolutionGood:"{name}: recommended resolution met.",qualityResolutionLow:"{name}: width is below 4000 pixels.",qualityFormat:"{name}: format {format}.",qualityTourJson:"The virtual tour settings could not be read.",qualityNoScenes:"The virtual tour has no scenes yet.",qualitySceneCount:"The virtual tour contains {count} scene(s).",qualitySceneMedia:"{scene}: this scene has missing or invalid panorama media.",qualityBrokenHotspot:"{scene}: this hotspot points to a missing scene.",enableShare:"Enable public link",disableShare:"Disable public link",shareActive:"Public tour link is active",shareInactive:"Public link disabled",shareHint:"Anyone with the link can view this tour. You can revoke access at any time.",copyShare:"Copy link",copied:"Link copied",
   emptyHotspots:"This scene has no interactive hotspots yet."
  }
@@ -61,7 +61,7 @@ function qualityText(check:QualityCheck,language:Language){
  const templates:Record<string,string>={
   no_media:t.qualityNoMedia,video_check_pending:t.qualityVideoPending,missing_file:t.qualityMissingFile,
   invalid_image:t.qualityInvalidImage,aspect_ratio:t.qualityAspectRatio,
-  image_format:t.qualityFormat,invalid_tour_json:t.qualityTourJson,no_tour_scenes:t.qualityNoScenes,
+  image_format:t.qualityFormat,seam_continuity:t.qualitySeamContinuity,invalid_tour_json:t.qualityTourJson,no_tour_scenes:t.qualityNoScenes,
   tour_scene_count:t.qualitySceneCount,scene_media_missing:t.qualitySceneMedia,broken_hotspot:t.qualityBrokenHotspot
  };
  if(check.code==="resolution")return (check.status==="pass"?t.qualityResolutionGood:t.qualityResolutionLow).replace("{name}",name);
