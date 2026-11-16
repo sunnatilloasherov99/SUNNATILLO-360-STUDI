@@ -31,8 +31,14 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
   drawingRef.current=false;lastPointRef.current=null;strokeStartRef.current=null;
   sourceRef.current=null;undoRef.current=[];redoRef.current=[];
   setSourceMode(false);setSourceLabel(t.noSource);setUndoCount(0);setRedoCount(0);setNotice("");
-  const canvas=patchCanvasRef.current;
-  if(canvas){canvas.width=0;canvas.height=0;}
+  const canvas=patchCanvasRef.current;const image=imageRef.current;
+  if(canvas){
+   canvas.width=0;canvas.height=0;
+   // Cached images may already be complete before the load handler runs.
+   if(image&&image.complete&&image.naturalWidth&&image.naturalHeight){
+    canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+   }
+  }
  },[imageUrl]);
 
  function snapshot(){
