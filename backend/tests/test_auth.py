@@ -94,6 +94,13 @@ def test_projects_and_editor_settings_are_private_to_owner(client: TestClient) -
     assert created.status_code == 201
     project_id = created.json()["id"]
 
+    empty_share = client.put(
+        f"/api/projects/{project_id}/share",
+        headers=bearer(owner_token),
+        json={"enabled": True},
+    )
+    assert empty_share.status_code == 422
+
     owner_projects = client.get("/api/projects", headers=bearer(owner_token))
     other_projects = client.get("/api/projects", headers=bearer(other_token))
     assert len(owner_projects.json()) == 1
