@@ -17,7 +17,7 @@ const modeKeys: { id: Mode; title: "aiMode" | "manualMode" | "collabMode"; descr
   { id: "collab", title: "collabMode", description: "collabModeDesc" }
 ];
 export default function App() {
-  const publicToken = window.location.pathname.match(/^\\/tour\\/([a-f0-9]{32})$/i)?.[1] || "";
+  const publicToken = window.location.pathname.match(/^\/tour\/([a-f0-9]{32})$/i)?.[1] || "";
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem("s360-language");
     return saved === "ru" || saved === "en" ? saved : "uz";
