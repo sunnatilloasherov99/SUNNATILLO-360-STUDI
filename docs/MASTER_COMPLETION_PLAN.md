@@ -54,6 +54,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] Frontend’da oq maska cho‘tkasi, AI yuborishdan oldin rozilik oynasi, oldin/keyin preview va natijani qabul/rad etish qo‘shildi (commit `5d6b50b`, `44d87b6`).
 - [x] AI providerga yuboriladigan maska qora fon + oq belgilangan hudud ko‘rinishiga normallashtirildi (commit `3df92da`).
 - [x] `/api/ai/capabilities` orqali provider mavjudligi tekshiriladi; AI tugmasi provider sozlanmagan bo‘lsa o‘chiq, qo‘lda tuzatish vositasi alohida ishlashda davom etadi.
+- [x] Panorama yoki token almashganda avvalgi AI so‘rovining kechikib kelgan javobi yangi rasm holatini bosib ketmasligi uchun request-version guard qo‘shildi (commit `a769b83`).
 
 ### 5.4 Eksport va qabul sinovlari
 - [x] AI natijasi → rang/yorug‘lik → clone brush qatlamasi → chok sozlamalari → JPEG eksport yagona render pipeline orqali bajariladi.
@@ -114,9 +115,10 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 1. AI maska tuzatishi va source_asset_id migratsiyasi, API hamda backend testlari CI natijasini tasdiqlash — bajarildi (run `43933375111`).
 2. So‘nggi kod commitidagi asinxron holat yangilanishi tuzatishi uchun frontend/backend/infrastructure CI — bajarildi, barcha 3 job success (run `43934039556`).
 3. Browser darajasidagi qo‘lda qabul sinovlari uchun bosqichma-bosqich checklist yaratildi: [PANORAMA_BROWSER_ACCEPTANCE.md](./PANORAMA_BROWSER_ACCEPTANCE.md).
-4. 5.3 uchun ComfyUI HTTP bridge va haqiqiy lokal model bilan integratsion sinov.
-5. 5.4 uchun checklist asosida browser darajasida eksport qatlamalari va AI rollback vizual sinovi.
-6. Haqiqiy telefon panoramasi bilan yakuniy qabul sinovi.
+4. AI inpainting panelidagi eskirgan so‘rov javoblarini bekor qilish himoyasi qo‘shildi (commit `a769b83`); CI natijasi tekshirilmoqda.
+5. 5.3 uchun ComfyUI HTTP bridge va haqiqiy lokal model bilan integratsion sinov.
+6. 5.4 uchun checklist asosida browser darajasida eksport qatlamalari va AI rollback vizual sinovi.
+7. Haqiqiy telefon panoramasi bilan yakuniy qabul sinovi.
 
 ## Reliz hisoboti
 
