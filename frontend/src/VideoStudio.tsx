@@ -85,7 +85,7 @@ export default function VideoStudio({token,language,projectId,projectName,projec
   const camera=new THREE.PerspectiveCamera(75,1,0.1,1200);
   const geometry=new THREE.SphereGeometry(500,64,48);
   geometry.scale(-1,1,1);
-  const texture=new THREE.VideoTexture(video);
+  const texture=new THREE.VideoTexture(media);
   texture.colorSpace=THREE.SRGBColorSpace;
   const material=new THREE.MeshBasicMaterial({map:texture});
   scene.add(new THREE.Mesh(geometry,material));
