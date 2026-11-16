@@ -44,4 +44,4 @@
 24. Editable project delivery, exports and backup.
 
 ## Current status
-Implemented foundation: multilingual web shell, startup-mode selection, server-backed project CRUD, persistent panorama upload/listing, 360° panorama viewer and Docker self-hosting baseline. Not yet implemented: user authentication and project ownership, full media editing, AI adapters, publishing integrations, automated quality analysis, export bundles and backup tooling.
+Implemented foundation: multilingual web shell, email account registration/login, JWT-protected project and media ownership, persistent panorama upload/listing, 360° panorama viewer, non-destructive image adjustments and edited-image export. In progress: full media editing, interactive virtual tours, AI adapters, publishing integrations, automated quality analysis, export bundles and backup tooling.
