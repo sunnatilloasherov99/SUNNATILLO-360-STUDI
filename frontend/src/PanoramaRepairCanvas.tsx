@@ -16,6 +16,7 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
  const sourceRef=useRef<{x:number;y:number}|null>(null);
  const drawingRef=useRef(false);
  const lastPointRef=useRef<{x:number;y:number}|null>(null);
+ const strokeStartRef=useRef<{x:number;y:number}|null>(null);
  const undoRef=useRef<ImageData[]>([]);
  const redoRef=useRef<ImageData[]>([]);
  const [sourceMode,setSourceMode]=useState(false);
@@ -45,8 +46,12 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
   const canvas=patchCanvasRef.current;const image=imageRef.current;const context=canvas?.getContext("2d");
   const source=sourceRef.current;if(!canvas||!image||!context||!source)return;
   const radius=Math.max(2,Math.min(brushSize,Math.floor(Math.min(canvas.width,canvas.height)/4)));
-  const sx=Math.max(radius,Math.min(canvas.width-radius,source.x));
-  const sy=Math.max(radius,Math.min(canvas.height-radius,source.y));
+  const start=strokeStartRef.current||target;
+  let offsetX=target.x-start.x;
+  if(offsetX>canvas.width/2)offsetX-=canvas.width;else if(offsetX< -canvas.width/2)offsetX+=canvas.width;
+  const rawSourceX=((source.x+offsetX)%canvas.width+canvas.width)%canvas.width;
+  const sx=Math.max(radius,Math.min(canvas.width-radius,rawSourceX));
+  const sy=Math.max(radius,Math.min(canvas.height-radius,source.y+(target.y-start.y)));
   const stampCanvas=document.createElement("canvas");stampCanvas.width=radius*2;stampCanvas.height=radius*2;
   const stampContext=stampCanvas.getContext("2d");if(!stampContext)return;
   stampContext.drawImage(image,sx-radius,sy-radius,radius*2,radius*2,0,0,radius*2,radius*2);
@@ -69,7 +74,7 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
    setSourceLabel(Math.round(sourceRef.current.x)+", "+Math.round(sourceRef.current.y));setSourceMode(false);setNotice("");return;
   }
   if(!sourceRef.current){setNotice(t.needSource);return;}
-  snapshot();drawingRef.current=true;lastPointRef.current=p;event.currentTarget.setPointerCapture(event.pointerId);stamp(p);
+  snapshot();drawingRef.current=true;lastPointRef.current=p;strokeStartRef.current=p;event.currentTarget.setPointerCapture(event.pointerId);stamp(p);
  }
  function onPointerMove(event:ReactPointerEvent<HTMLCanvasElement>){
   if(!drawingRef.current)return;const p=point(event);if(!p)return;
@@ -78,7 +83,7 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
   for(let i=1;i<=steps;i++)stamp({x:last.x+dx*i/steps,y:last.y+dy*i/steps});
   lastPointRef.current=p;
  }
- function onPointerUp(){drawingRef.current=false;lastPointRef.current=null;}
+ function onPointerUp(){drawingRef.current=false;lastPointRef.current=null;strokeStartRef.current=null;}
  function restore(from:ImageData[],to:ImageData[],setFrom:(n:number)=>void,setTo:(n:number)=>void){
   const canvas=patchCanvasRef.current;const context=canvas?.getContext("2d");if(!canvas||!context||!from.length)return;
   try{to.push(context.getImageData(0,0,canvas.width,canvas.height));const next=from.pop();if(next)context.putImageData(next,0,0);setFrom(from.length);setTo(to.length);}catch{setNotice("History unavailable");}
