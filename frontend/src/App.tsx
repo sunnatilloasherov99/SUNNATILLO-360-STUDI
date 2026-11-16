@@ -54,7 +54,7 @@ export default function App() {
     if (!email.trim() || !password || authLoading) return;
     setAuthLoading(true); setAuthError("");
     try {
-      const response = await fetch(`/api/auth/${authMode}`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ email: email.trim(), password }) });
+      const response = await fetch(`/api/auth/${authMode}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email.trim(), password }) });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.detail || "Authentication failed");
       localStorage.setItem("s360-token", data.access_token); setToken(data.access_token); setPassword("");
@@ -67,7 +67,7 @@ export default function App() {
     setSavingProject(true);
     try {
       const response = await fetch("/api/projects", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name: projectName.trim(), mode })
       });
       if (!response.ok) {
