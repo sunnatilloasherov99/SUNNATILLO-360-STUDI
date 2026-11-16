@@ -6,6 +6,7 @@ import uuid
 import hashlib
 import secrets
 import json
+import base64
 from io import BytesIO
 from zipfile import ZIP_DEFLATED, ZipFile
 from PIL import Image, UnidentifiedImageError
@@ -238,6 +239,7 @@ class AIRequest(BaseModel):
     prompt: str = Field(min_length=1, max_length=4000)
     context: str = Field(default="", max_length=10000)
     language: Literal["uz", "ru", "en"] = "uz"
+    media_id: str | None = Field(default=None, max_length=36)
 
 
 AI_ROLE_PROMPTS = {
@@ -443,7 +445,30 @@ def ai_capabilities(user: User = Depends(current_user)):
 
 
 @app.post("/api/ai/assist")
-async def ai_assist(payload: AIRequest, user: User = Depends(current_user)):
+async def ai_assist(payload: AIRequest, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    image_base64 = None
+    if payload.media_id:
+        asset = db.scalar(
+            select(MediaAsset).join(Project).where(
+                MediaAsset.id == payload.media_id,
+                Project.owner_id == user.id,
+                MediaAsset.content_type.like("image/%"),
+            )
+        )
+        if not asset:
+            raise HTTPException(status_code=404, detail="Selected image was not found in your projects.")
+        image_path = storage_dir / asset.stored_name
+        if not image_path.is_file():
+            raise HTTPException(status_code=404, detail="Selected image file is missing.")
+        image_bytes = image_path.read_bytes()
+        if len(image_bytes) > 12 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Choose an image smaller than 12 MB for local AI analysis.")
+        try:
+            with Image.open(image_path) as image:
+                image.verify()
+        except (UnidentifiedImageError, OSError, ValueError):
+            raise HTTPException(status_code=422, detail="Selected image is invalid or cannot be decoded.")
+        image_base64 = base64.b64encode(image_bytes).decode("ascii")
     if not settings.ollama_base_url.strip():
         raise HTTPException(
             status_code=503,
@@ -468,7 +493,11 @@ async def ai_assist(payload: AIRequest, user: User = Depends(current_user)):
                     "stream": False,
                     "messages": [
                         {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_content},
+                        {
+                            "role": "user",
+                            "content": user_content + ("\n\nPlease inspect the attached image." if image_base64 else ""),
+                            **({"images": [image_base64]} if image_base64 else {}),
+                        },
                     ],
                 },
             )
@@ -483,7 +512,7 @@ async def ai_assist(payload: AIRequest, user: User = Depends(current_user)):
     output = result.get("message", {}).get("content", "").strip()
     if not output:
         raise HTTPException(status_code=502, detail="The local AI service returned an empty response.")
-    return {"provider": "ollama", "model": settings.ollama_model, "role": payload.role, "output": output}
+    return {"provider": "ollama", "model": settings.ollama_model, "role": payload.role, "output": output, "image_analyzed": bool(image_base64)}
 
 
 @app.get("/api/projects/{project_id}/quality")
