@@ -572,7 +572,7 @@ async def upload_project_media(
     }
     extension = allowed_types.get(file.content_type or "")
     if not extension:
-        raise HTTPException(status_code=415, detail="Only JPEG, PNG and WebP images are supported.")
+        raise HTTPException(status_code=415, detail="Only JPEG, PNG, WebP, MP4 and WebM media are supported.")
 
     asset_id = str(uuid.uuid4())
     stored_name = f"{asset_id}{extension}"
