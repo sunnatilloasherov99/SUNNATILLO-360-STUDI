@@ -29,5 +29,13 @@
   "noProjects": "Hozircha loyihalar yo‘q",
   "projectCreated": "Loyiha yaratildi",
   "privacyNote": "Fayllaringiz va ekraningiz tashqi AI xizmatlariga faqat alohida ruxsatingiz bilan yuboriladi.",
-  "modeRequired": "Avval ish boshlash usulini tanlang"
+  "modeRequired": "Avval ish boshlash usulini tanlang",
+  "studio": "STUDIO",
+  "projectWorkflow": "LOYIHA ISH JARAYONI",
+  "selected": "TANLANDI",
+  "selectMode": "REJIMNI TANLASH",
+  "activeProject": "FAOL LOYIHA",
+  "yourWork": "LOYIHALARINGIZ",
+  "portableTag": "MUSTAQIL · KO‘CHIRISHGA MOS · XAVFSIZ",
+  "immersiveTag": "360° MUHIT"
 }
