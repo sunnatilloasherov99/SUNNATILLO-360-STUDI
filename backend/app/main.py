@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse, Response, JSONResponse
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, create_engine, select, update
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker, Session
 import jwt
 import httpx
@@ -310,8 +311,24 @@ def media_data(asset: MediaAsset) -> dict:
 
 
 @app.get("/api/health")
-async def health():
-    return {"status": "ok", "application": "SUNNATILLO 360° STUDIO", "version": "0.2.0"}
+async def health(db: Session = Depends(get_db)):
+    try:
+        db.execute(select(1))
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail="Database is unavailable.")
+    if rate_limit_redis is not None:
+        try:
+            await rate_limit_redis.ping()
+        except RedisError:
+            raise HTTPException(status_code=503, detail="Rate limit storage is unavailable.")
+    if not storage_dir.is_dir() or not os.access(storage_dir, os.W_OK):
+        raise HTTPException(status_code=503, detail="Media storage is unavailable.")
+    return {
+        "status": "ok",
+        "application": "SUNNATILLO 360° STUDIO",
+        "version": "0.2.0",
+        "dependencies": {"database": "ok", "rate_limit_storage": "ok" if rate_limit_redis else "memory", "media_storage": "ok"},
+    }
 
 
 @app.get("/api/capabilities")
