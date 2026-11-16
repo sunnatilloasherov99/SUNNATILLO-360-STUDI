@@ -18,7 +18,7 @@ export default function MediaStudio({ token, language, projectId, projectName, p
  async function loadAssets(id:string){try{const r=await fetch(`/api/projects/${id}/media`, { headers: { Authorization: `Bearer ${token}` } });if(!r.ok)throw new Error();setAssets(await r.json());setError("");}catch{setError(t.failed);}}
  useEffect(()=>{setUrl(null);setMeta(null);setAssets([]);if(projectId)void loadAssets(projectId);},[projectId]);
  useEffect(()=>{if(!url||!host.current)return;const viewer=new Viewer({container:host.current,panorama:url,navbar:["zoom","move","fullscreen"]});return()=>viewer.destroy();},[url]);
- function showAsset(asset:Asset){const image=new Image();const fileUrl=asset.url;image.onload=()=>{setMeta({width:image.naturalWidth,height:image.naturalHeight,name:asset.name});setUrl(fileUrl);setSaved(true);setError("");};image.onerror=()=>setError(t.readError);image.src=fileUrl;}
+ async function showAsset(asset:Asset){try{const response=await fetch(asset.url,{headers:{Authorization:`Bearer ${token}`}});if(!response.ok)throw new Error();const blob=await response.blob();const fileUrl=URL.createObjectURL(blob);const image=new Image();image.onload=()=>{setMeta({width:image.naturalWidth,height:image.naturalHeight,name:asset.name});setUrl(fileUrl);setSaved(true);setError("");};image.onerror=()=>{URL.revokeObjectURL(fileUrl);setError(t.readError);};image.src=fileUrl;}catch{setError(t.failed);}}
  async function choose(file?:File){
   if(!file)return;
   if(!["image/jpeg","image/png","image/webp"].includes(file.type)){setError(t.invalid);return;}
@@ -26,7 +26,7 @@ export default function MediaStudio({ token, language, projectId, projectName, p
   const localUrl=URL.createObjectURL(file);const image=new Image();
   image.onload=async()=>{
    setMeta({width:image.naturalWidth,height:image.naturalHeight,name:file.name});setUrl(localUrl);setSaved(false);setUploading(true);setError("");
-   try{const body=new FormData();body.append("file",file);const response=await fetch(`/api/projects/${projectId}/media`,{method:"POST",headers:{Authorization:`Bearer ${token}`},body});if(!response.ok)throw new Error();const asset:Asset=await response.json();URL.revokeObjectURL(localUrl);setAssets(current=>[asset,...current.filter(a=>a.id!==asset.id)]);setUrl(asset.url);setMeta({width:image.naturalWidth,height:image.naturalHeight,name:asset.name});setSaved(true);}
+   try{const body=new FormData();body.append("file",file);const response=await fetch(`/api/projects/${projectId}/media`,{method:"POST",headers:{Authorization:`Bearer ${token}`},body});if(!response.ok)throw new Error();const asset:Asset=await response.json();const protectedFile=await fetch(asset.url,{headers:{Authorization:`Bearer ${token}`}});if(!protectedFile.ok)throw new Error();const storedBlob=await protectedFile.blob();URL.revokeObjectURL(localUrl);setAssets(current=>[asset,...current.filter(a=>a.id!==asset.id)]);setUrl(URL.createObjectURL(storedBlob));setMeta({width:image.naturalWidth,height:image.naturalHeight,name:asset.name});setSaved(true);}
    catch{setError(t.failed);}
    finally{setUploading(false);}
   };
