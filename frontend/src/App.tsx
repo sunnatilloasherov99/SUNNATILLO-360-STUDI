@@ -101,8 +101,8 @@ export default function App() {
       <button className="nav-item active"><Layers3 size={17}/>{t("workspace")}</button>
       <button className="nav-item" onClick={() => { setShowTour(false); setShowAI(false); setShowVideo(false); setShowMedia(false); setShowCreate(true); }}><FolderOpen size={17}/>{t("projects")}</button>
       <div className="side-label tools-label">{t("studio")}</div>
-      <button className={`nav-item ${showTour ? "active" : ""}`} onClick={openTourStudio}><Globe2 size={17}/>{t("publisher")}</button>
-      <button className="nav-item"><ShieldCheck size={17}/>{t("quality")} <span className="soon">{t("comingSoon")}</span></button>
+      <button className={`nav-item ${showTour ? "active" : ""}`} onClick={openTourStudio}><Globe2 size={17}/>{language === "ru" ? "Виртуальный тур" : language === "en" ? "Virtual tour" : "Virtual tur"}</button>
+      <button className="nav-item" onClick={openTourStudio}><ShieldCheck size={17}/>{t("quality")}</button>
       <button className={`nav-item ${showMedia ? "active" : ""}`} onClick={() => { setShowAI(false); setShowTour(false); setShowVideo(false); setShowMedia(true); }}><CloudUpload size={17}/>{t("media")}</button>
       <button className={`nav-item ${showAI ? "active" : ""}`} onClick={() => { setShowMedia(false); setShowTour(false); setShowVideo(false); setShowAI(true); }}><Bot size={17}/>{language === "ru" ? "AI-помощники" : language === "en" ? "AI assistants" : "AI yordamchilar"}</button>
       <button className={`nav-item ${showVideo ? "active" : ""}`} onClick={openVideoStudio}><Film size={17}/>{language === "ru" ? "Видео 360°" : language === "en" ? "360° video" : "360° video"}</button>
