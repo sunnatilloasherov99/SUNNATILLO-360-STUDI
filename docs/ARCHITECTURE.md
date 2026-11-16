@@ -5,6 +5,7 @@
 - Domain logic must not depend on a hosting provider.
 - Storage access uses the local filesystem adapter initially; S3-compatible storage can be added without changing domain logic.
 - AI providers will be adapters behind a common internal contract. No provider is mandatory.
+- The optional Ollama adapter runs on the user's own server, sends only explicitly entered text and requires no paid API key. Image/video payloads are not sent by the current text-only assistant.
 - Publishing targets are capability-checked adapters. Never claim a platform can publish tours unless its official API, partner agreement and account permissions allow it.
 - Localization dictionaries are the source of truth. Every new UI key must be added to Uzbek, Russian and English.
 
