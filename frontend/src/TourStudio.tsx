@@ -70,7 +70,9 @@ export default function TourStudio({ token, language, projectId, projectName, on
  const [panoramaUrl,setPanoramaUrl]=useState<string|null>(null);
  const [loading,setLoading]=useState(true);
  const [saving,setSaving]=useState(false);
- const [exporting,setExporting]=useState(false);\n const [checking,setChecking]=useState(false);\n const [quality,setQuality]=useState<QualityReport|null>(null);
+ const [exporting,setExporting]=useState(false);
+ const [checking,setChecking]=useState(false);
+ const [quality,setQuality]=useState<QualityReport|null>(null);
  const [error,setError]=useState("");
  const [message,setMessage]=useState("");
  const activeScene=useMemo(()=>tour.scenes.find(scene=>scene.id===activeSceneId)??tour.scenes[0]??null,[tour.scenes,activeSceneId]);
@@ -218,7 +220,8 @@ export default function TourStudio({ token, language, projectId, projectName, on
  return <section className="tour-studio">
   <div className="media-head"><div><div className="eyebrow muted">360° TOUR WORKSPACE · {projectName}</div><h2>{t.title}</h2></div><div className="editor-actions"><button className="secondary" disabled={checking} onClick={()=>void runQualityCheck()}>{checking?t.checking:t.quality}</button><button className="secondary" disabled={exporting||saving} onClick={()=>void exportProject()}>{exporting?t.exporting:t.export}</button><button className="secondary" onClick={onBack}>{t.back}</button></div></div>
   {loading?<div className="media-empty">…</div>:<>
-   {quality&&<div className="quality-panel"><h3>{t.qualityReport}</h3><div className="quality-summary"><span className="quality-pass">✓ {quality.summary.pass}</span><span className="quality-warning">! {quality.summary.warning}</span><span className="quality-fail">× {quality.summary.fail}</span></div><div className="quality-check-list">{quality.checks.map(check=><div className="quality-check" key={check.id}><span className={`quality-status ${check.status}`}>{check.status==="pass"?"✓":check.status==="warning"?"!":"×"}</span><span>{check.message}</span></div>)}</div></div>}\n   <div className="tour-meta">
+   {quality&&<div className="quality-panel"><h3>{t.qualityReport}</h3><div className="quality-summary"><span className="quality-pass">✓ {quality.summary.pass}</span><span className="quality-warning">! {quality.summary.warning}</span><span className="quality-fail">× {quality.summary.fail}</span></div><div className="quality-check-list">{quality.checks.map(check=><div className="quality-check" key={check.id}><span className={`quality-status ${check.status}`}>{check.status==="pass"?"✓":check.status==="warning"?"!":"×"}</span><span>{check.message}</span></div>)}</div></div>}
+   <div className="tour-meta">
     <label className="field-label">{t.tourTitle}<input value={tour.title} onChange={e=>setTour(current=>({...current,title:e.target.value}))}/></label>
     <label className="field-label">{t.description}<textarea rows={2} value={tour.description} onChange={e=>setTour(current=>({...current,description:e.target.value}))}/></label>
    </div>
