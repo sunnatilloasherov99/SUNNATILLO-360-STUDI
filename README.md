@@ -21,6 +21,7 @@ An independent, portable web platform for professional 360° media workflows and
 - Initial 360° video workspace: upload MP4/WebM, preview equirectangular footage on an interactive Three.js sphere, drag to look around and use playback controls.
 - Original imported panorama is not modified.
 - Non-destructive brightness, contrast and saturation adjustments can be previewed and saved per project.
+- Horizontal seam repositioning can be previewed and exported to a new JPEG without overwriting the source; it moves the panorama edge but does not reconstruct missing pixels.
 - Export adjusted panorama images as new JPEG files while preserving the uploaded original.
 - Build multi-scene virtual tours from uploaded panoramas, reorder scenes and connect them with clickable in-view hotspots.
 - Create revocable public tour links; public viewers can navigate scenes and hotspots without logging in.
