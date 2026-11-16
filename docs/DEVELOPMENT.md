@@ -47,6 +47,16 @@ docker compose up -d --build
 
 The API container runs `alembic upgrade head` before starting FastAPI. After deployment over HTTPS, desktop users can install the PWA from the browser's address-bar install icon or browser menu; mobile users can use Add to Home Screen. Docker Compose also starts a private Redis service for shared request rate limits; local development defaults to in-memory limits. PostgreSQL and media files use separate persistent Docker volumes.
 
+### Production HTTPS deployment
+
+The normal Compose setup publishes the web service only on loopback at `127.0.0.1:WEB_PORT`. For a public VPS, set `DOMAIN` to a domain whose DNS A/AAAA records point to the server, set `FRONTEND_ORIGIN=https://DOMAIN`, open inbound TCP 80/443, copy `infra/.env.example` to `infra/.env`, replace all secrets, then run:
+
+```bash
+docker compose --profile production --env-file .env -f docker-compose.yml up -d --build
+```
+
+Run the command from `infra/`. The optional Caddy profile obtains and renews HTTPS certificates automatically. Keep the API, PostgreSQL and Redis private; only Caddy publishes ports 80/443. Caddy certificates and keys are stored in persistent Docker volumes.
+
 ### Backup and restore
 Run these from the `infra/` directory on a Linux host with Docker Compose:
 ```bash
@@ -58,10 +68,10 @@ Backups include a PostgreSQL custom-format dump, original media archive and SHA-
 ## Implemented boundaries
 - Installable PWA shell for desktop/mobile browsers; offline mode caches only the app shell, not private API data.
 - Account registration/login and per-user project/media access control.
-- 360° panorama viewing, non-destructive image adjustments and edited JPEG export.
+- 360° panorama viewing, non-destructive brightness/contrast/saturation, seam repositioning and edited JPEG export.
 - Multi-scene virtual-tour builder with clickable scene hotspots and revocable public viewing links.
 - Quality report and authenticated ZIP project export.
 - MP4/WebM upload and basic equirectangular 360° video playback; no timeline editing or transcoding yet.
 - Optional local Ollama AI specialists and parallel three-role collaboration; selected project images can be analyzed with a vision-capable model. Video analysis and cloud AI adapters are not yet implemented.
 - Google Street View, Yandex Maps and 2GIS publishing are not yet connected. Publishing must use official APIs and account permissions.
-- Production launch still requires rate limiting, email verification/password reset, HTTPS configuration and a tested backup/restore procedure.
+- Remaining production tasks: email verification/password reset, automated backup scheduling and restore drills, final domain/DNS setup and live deployment. Manual backup/restore scripts and Redis-backed rate limits are implemented.
