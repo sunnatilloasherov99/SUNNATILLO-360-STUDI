@@ -63,6 +63,14 @@ def upgrade() -> None:
                     batch.add_column(column)
                 if "owner_id" not in existing:
                     batch.create_foreign_key("fk_projects_owner_id_users", "users", ["owner_id"], ["id"])
+        foreign_keys = inspect(op.get_bind()).get_foreign_keys("projects")
+        has_owner_foreign_key = any(
+            fk.get("referred_table") == "users" and fk.get("constrained_columns") == ["owner_id"]
+            for fk in foreign_keys
+        )
+        if "owner_id" in _columns("projects") and not has_owner_foreign_key:
+            with op.batch_alter_table("projects") as batch:
+                batch.create_foreign_key("fk_projects_owner_id_users", "users", ["owner_id"], ["id"])
 
     if "media_assets" not in tables:
         op.create_table(
