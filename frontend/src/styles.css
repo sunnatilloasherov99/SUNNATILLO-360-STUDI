@@ -33,3 +33,5 @@
 .saved-media-item>span{width:34px;height:34px;border-radius:8px;background:#1d3453;color:#a9caff;display:grid;place-items:center;font-size:10px;font-weight:700}
 .saved-media-item strong{font-size:10px;flex:1;overflow-wrap:anywhere}
 .saved-media-item small{font-size:9px;color:#8195b4}
+
+.auth-panel{width:min(100%,440px);display:grid;gap:16px;margin-top:28px;padding:24px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:20px;background:rgba(255,255,255,.035)}.auth-panel .field-label{display:grid;gap:8px}.auth-panel input{width:100%;box-sizing:border-box}.auth-panel>.primary{width:100%;justify-content:center}.auth-panel .modal-actions{display:flex;gap:10px}.auth-panel .modal-actions button{flex:1}.auth-panel .privacy-inline{font-size:12px;line-height:1.5}
