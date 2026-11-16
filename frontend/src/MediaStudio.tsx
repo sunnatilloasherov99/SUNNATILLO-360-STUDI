@@ -17,19 +17,22 @@ function featherPanoramaSeam(canvas:HTMLCanvasElement,percent:number){
  const band=Math.min(Math.floor(canvas.width/2),Math.round(canvas.width*Math.min(5,Math.max(0,percent))/100));
  if(band<1)return;
  const context=canvas.getContext("2d");if(!context)return;
- const frame=context.getImageData(0,0,canvas.width,canvas.height);const pixels=frame.data;
+ const leftFrame=context.getImageData(0,0,band,canvas.height);
+ const rightFrame=context.getImageData(canvas.width-band,0,band,canvas.height);
+ const leftPixels=leftFrame.data;const rightPixels=rightFrame.data;
  for(let y=0;y<canvas.height;y++){
   for(let x=0;x<band;x++){
    const alpha=0.5*(1-x/band);
-   const left=(y*canvas.width+x)*4;const right=(y*canvas.width+(canvas.width-1-x))*4;
+   const left=(y*band+x)*4;const right=(y*band+(band-1-x))*4;
    for(let channel=0;channel<3;channel++){
-    const leftValue=pixels[left+channel];const rightValue=pixels[right+channel];
-    pixels[left+channel]=Math.round(leftValue*(1-alpha)+rightValue*alpha);
-    pixels[right+channel]=Math.round(rightValue*(1-alpha)+leftValue*alpha);
+    const leftValue=leftPixels[left+channel];const rightValue=rightPixels[right+channel];
+    leftPixels[left+channel]=Math.round(leftValue*(1-alpha)+rightValue*alpha);
+    rightPixels[right+channel]=Math.round(rightValue*(1-alpha)+leftValue*alpha);
    }
   }
  }
- context.putImageData(frame,0,0);
+ context.putImageData(leftFrame,0,0);
+ context.putImageData(rightFrame,canvas.width-band,0);
 }
 
 export default function MediaStudio({ token, language, projectId, projectName, projects, onBack, onSelectProject }: Props) {
