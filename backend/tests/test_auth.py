@@ -2,6 +2,7 @@ from collections.abc import Generator
 from pathlib import Path
 from io import BytesIO
 from zipfile import ZipFile
+from PIL import Image
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -125,10 +126,12 @@ def test_tour_is_private_and_references_owned_media(client: TestClient) -> None:
     )
     project_id = created.json()["id"]
 
+    png_buffer = BytesIO()
+    Image.new("RGB", (2, 1), color="white").save(png_buffer, format="PNG")
     uploaded = client.post(
         f"/api/projects/{project_id}/media",
         headers=bearer(owner_token),
-        files={"file": ("entry.png", b"\x89PNG\r\n\x1a\nmock-image", "image/png")},
+        files={"file": ("entry.png", png_buffer.getvalue(), "image/png")},
     )
     assert uploaded.status_code == 201
     media_id = uploaded.json()["id"]
@@ -153,6 +156,14 @@ def test_tour_is_private_and_references_owned_media(client: TestClient) -> None:
     )
     assert saved.status_code == 200
     assert saved.json()["scenes"][0]["media_id"] == media_id
+
+    quality = client.get(
+        f"/api/projects/{project_id}/quality",
+        headers=bearer(owner_token),
+    )
+    assert quality.status_code == 200
+    assert quality.json()["summary"]["warning"] >= 1
+    assert quality.json()["summary"]["fail"] == 0
 
     private_read = client.get(
         f"/api/projects/{project_id}/tour",
