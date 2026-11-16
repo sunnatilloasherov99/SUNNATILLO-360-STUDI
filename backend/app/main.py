@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, create_engine, select, inspect, text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker, Session
 import jwt
 import httpx
@@ -88,18 +88,6 @@ class MediaAsset(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     project: Mapped[Project] = relationship(back_populates="media")
 
-
-Base.metadata.create_all(bind=engine)
-# Upgrade existing development databases without losing projects.
-with engine.begin() as connection:
-    columns = {column["name"] for column in inspect(engine).get_columns("projects")}
-    if "owner_id" not in columns:
-        connection.execute(text("ALTER TABLE projects ADD COLUMN owner_id VARCHAR(36)"))
-    if "edit_settings_json" not in columns:
-        connection.execute(text("ALTER TABLE projects ADD COLUMN edit_settings_json TEXT NOT NULL DEFAULT '{}'"))
-    if "tour_json" not in columns:
-        connection.execute(text("ALTER TABLE projects ADD COLUMN tour_json TEXT NOT NULL DEFAULT '{}'"))
-    connection.execute(text("CREATE INDEX IF NOT EXISTS ix_projects_owner_id ON projects (owner_id)"))
 
 app = FastAPI(title=settings.app_name, version="0.2.0")
 origins = [item.strip() for item in settings.frontend_origin.split(",") if item.strip()]
