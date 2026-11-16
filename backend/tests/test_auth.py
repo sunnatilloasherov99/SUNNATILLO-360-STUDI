@@ -206,6 +206,31 @@ def test_tour_is_private_and_references_owned_media(client: TestClient) -> None:
     )
     assert invalid_save.status_code == 422
 
+    other_share = client.get(f"/api/projects/{project_id}/share", headers=bearer(other_token))
+    assert other_share.status_code == 404
+    enabled = client.put(
+        f"/api/projects/{project_id}/share",
+        headers=bearer(owner_token),
+        json={"enabled": True},
+    )
+    assert enabled.status_code == 200
+    share_path = enabled.json()["share_url"]
+    share_token = share_path.rsplit("/", 1)[-1]
+    public_tour = client.get(f"/api/public/tours/{share_token}")
+    assert public_tour.status_code == 200
+    assert public_tour.json()["scenes"][0]["title"] == "Entry"
+    public_media = client.get(public_tour.json()["scenes"][0]["media_url"])
+    assert public_media.status_code == 200
+    assert public_media.headers["content-type"] == "image/png"
+
+    disabled = client.put(
+        f"/api/projects/{project_id}/share",
+        headers=bearer(owner_token),
+        json={"enabled": False},
+    )
+    assert disabled.status_code == 200
+    assert client.get(f"/api/public/tours/{share_token}").status_code == 404
+
     exported = client.get(
         f"/api/projects/{project_id}/export",
         headers=bearer(owner_token),
