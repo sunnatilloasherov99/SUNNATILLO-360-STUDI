@@ -22,6 +22,8 @@ An independent, portable web platform for professional 360° media workflows and
 - Non-destructive brightness, contrast and saturation adjustments can be previewed and saved per project.
 - Export adjusted panorama images as new JPEG files while preserving the uploaded original.
 - Build private multi-scene virtual tours from uploaded panoramas, reorder scenes and connect them with clickable in-view hotspots.
+- Run project quality checks for image integrity, 2:1 panorama ratio, recommended resolution and broken tour links.
+- Download an authenticated ZIP archive containing project metadata, tour configuration, edit settings and original media.
 - FastAPI health and capability endpoints.
 - Server-side project create/list/delete API backed by SQLAlchemy and PostgreSQL (SQLite is available for local development).
 - Persistent JPEG/PNG/WebP media upload, listing and file delivery endpoints with a configurable upload limit.
