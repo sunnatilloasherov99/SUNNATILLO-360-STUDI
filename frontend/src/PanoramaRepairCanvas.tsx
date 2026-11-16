@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 
 type Language = "uz" | "ru" | "en";
 type Props = { imageUrl: string; language: Language; patchCanvasRef: { current: HTMLCanvasElement | null } };
@@ -35,7 +36,7 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
   if(!canvas||!context)return;
   try{undoRef.current=[...undoRef.current.slice(-11),context.getImageData(0,0,canvas.width,canvas.height)];redoRef.current=[];setUndoCount(undoRef.current.length);setRedoCount(0);}catch{setNotice("Canvas snapshot unavailable");}
  }
- function point(event:React.PointerEvent<HTMLCanvasElement>){
+ function point(event:ReactPointerEvent<HTMLCanvasElement>){
   const canvas=patchCanvasRef.current;if(!canvas)return null;
   const rect=canvas.getBoundingClientRect();
   return {x:Math.max(0,Math.min(canvas.width-1,(event.clientX-rect.left)*canvas.width/rect.width)),y:Math.max(0,Math.min(canvas.height-1,(event.clientY-rect.top)*canvas.height/rect.height))};
@@ -59,7 +60,7 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
    context.drawImage(stampCanvas,x,target.y-radius);
   }
  }
- function onPointerDown(event:React.PointerEvent<HTMLCanvasElement>){
+ function onPointerDown(event:ReactPointerEvent<HTMLCanvasElement>){
   const p=point(event);if(!p)return;
   if(sourceMode){
    const canvas=patchCanvasRef.current;if(!canvas)return;
@@ -70,7 +71,7 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
   if(!sourceRef.current){setNotice(t.needSource);return;}
   snapshot();drawingRef.current=true;lastPointRef.current=p;event.currentTarget.setPointerCapture(event.pointerId);stamp(p);
  }
- function onPointerMove(event:React.PointerEvent<HTMLCanvasElement>){
+ function onPointerMove(event:ReactPointerEvent<HTMLCanvasElement>){
   if(!drawingRef.current)return;const p=point(event);if(!p)return;
   const last=lastPointRef.current||p;const dx=p.x-last.x;const dy=p.y-last.y;const distance=Math.hypot(dx,dy);const step=Math.max(2,brushSize*0.22);
   const steps=Math.max(1,Math.ceil(distance/step));
