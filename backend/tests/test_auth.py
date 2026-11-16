@@ -475,6 +475,28 @@ def test_uploaded_original_media_is_immutable_and_private(client: TestClient) ->
     assert original_download.headers["content-type"] == "image/png"
     assert original_download.headers["x-content-type-options"] == "nosniff"
 
+    edited_buffer = BytesIO()
+    Image.new("RGB", (16, 8), color=(180, 42, 61)).save(edited_buffer, format="PNG")
+    derivative = client.post(
+        f"/api/projects/{project_id}/media",
+        headers=bearer(owner_token),
+        files={"file": ("edited-panorama.png", edited_buffer.getvalue(), "image/png")},
+        data={"source_asset_id": asset_id},
+    )
+    assert derivative.status_code == 201, derivative.text
+    assert derivative.json()["sourceAssetId"] == asset_id
+
+    invalid_source = client.post(
+        f"/api/projects/{project_id}/media",
+        headers=bearer(owner_token),
+        files={"file": ("orphan-edit.png", edited_buffer.getvalue(), "image/png")},
+        data={"source_asset_id": "not-an-owned-source"},
+    )
+    assert invalid_source.status_code == 422
+
+    original_after_edit = client.get(f"/api/media/{asset_id}/file", headers=bearer(owner_token))
+    assert original_after_edit.content == original_bytes
+
     other_download = client.get(f"/api/media/{asset_id}/file", headers=bearer(other_token))
     assert other_download.status_code == 404
     other_list = client.get(f"/api/projects/{project_id}/media", headers=bearer(other_token))
