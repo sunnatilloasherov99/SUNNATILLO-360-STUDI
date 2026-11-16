@@ -87,6 +87,11 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     };
     image.onerror = () => setMessage(t.unavailable);
     image.src = imageUrl;
+    void fetch("/api/ai/capabilities", { headers: { Authorization: "Bearer " + token } })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => setConfigured(Boolean(data?.panorama_inpainting?.enabled)))
+      .catch(() => setConfigured(false));
+    setHasMask(false);
     setResultUrl(current => {
       if (current) URL.revokeObjectURL(current);
       return null;
@@ -123,14 +128,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
   async function generate() {
     const canvas = canvasRef.current;
     if (!canvas || working) return;
-    const context = canvas.getContext("2d");
-    if (!context) return;
-    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-    let marked = false;
-    for (let i = 3; i < pixels.length; i += 4) {
-      if (pixels[i] > 0) { marked = true; break; }
-    }
-    if (!marked) { setMessage(t.noMask); return; }
+    if (!hasMask) { setMessage(t.noMask); return; }
     if (!window.confirm(t.confirm)) return;
     setWorking(true);
     setMessage("");
@@ -173,6 +171,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
       <button className="secondary" type="button" onClick={() => {
         const canvas = canvasRef.current;
         canvas?.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
+        setHasMask(false);
         setMessage("");
       }}>{t.clear}</button>
       <button className="primary" type="button" disabled={working || !dimensions.width || !configured} onClick={() => void generate()}>{working ? t.working : t.generate}</button>
