@@ -10,19 +10,20 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("media_assets", sa.Column("source_asset_id", sa.String(length=36), nullable=True))
-    op.create_index("ix_media_assets_source_asset_id", "media_assets", ["source_asset_id"])
-    op.create_foreign_key(
-        "fk_media_assets_source_asset_id_media_assets",
-        "media_assets",
-        "media_assets",
-        ["source_asset_id"],
-        ["id"],
-        ondelete="SET NULL",
-    )
+    with op.batch_alter_table("media_assets") as batch_op:
+        batch_op.add_column(sa.Column("source_asset_id", sa.String(length=36), nullable=True))
+        batch_op.create_index("ix_media_assets_source_asset_id", ["source_asset_id"])
+        batch_op.create_foreign_key(
+            "fk_media_assets_source_asset_id_media_assets",
+            "media_assets",
+            ["source_asset_id"],
+            ["id"],
+            ondelete="SET NULL",
+        )
 
 
 def downgrade() -> None:
-    op.drop_constraint("fk_media_assets_source_asset_id_media_assets", "media_assets", type_="foreignkey")
-    op.drop_index("ix_media_assets_source_asset_id", table_name="media_assets")
-    op.drop_column("media_assets", "source_asset_id")
+    with op.batch_alter_table("media_assets") as batch_op:
+        batch_op.drop_constraint("fk_media_assets_source_asset_id_media_assets", type_="foreignkey")
+        batch_op.drop_index("ix_media_assets_source_asset_id")
+        batch_op.drop_column("source_asset_id")
