@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Aperture, Bot, CheckCircle2, ChevronRight, CircleHelp, CloudUpload, FolderOpen, Globe2, Languages, Layers3, Plus, ShieldCheck, SlidersHorizontal, Sparkles, WandSparkles } from "lucide-react";
 import { getMissingTranslations, translate } from "./i18n";
 import type { Language } from "./i18n";
+import MediaStudio from "./MediaStudio";
 
 type Mode = "ai" | "manual" | "collab";
 type Project = { id: string; name: string; mode: Mode; updatedAt: string };
@@ -21,6 +22,7 @@ export default function App() {
   const [projectName, setProjectName] = useState("");
   const [projects, setProjects] = useState<Project[]>(() => JSON.parse(localStorage.getItem("s360-projects") || "[]"));
   const [activeProject, setActiveProject] = useState<Project | null>(null);
+  const [showMedia, setShowMedia] = useState(false);
   const t = (key: Parameters<typeof translate>[1]) => translate(language, key);
   const missing = useMemo(() => getMissingTranslations(), []);
   function changeLanguage(next: Language) { setLanguage(next); localStorage.setItem("s360-language", next); }
@@ -39,7 +41,7 @@ export default function App() {
       <div className="side-label tools-label">{t("studio")}</div>
       <button className="nav-item" onClick={() => setActiveProject(null)}><Globe2 size={17}/>{t("publisher")} <span className="soon">{t("comingSoon")}</span></button>
       <button className="nav-item"><ShieldCheck size={17}/>{t("quality")} <span className="soon">{t("comingSoon")}</span></button>
-      <button className="nav-item"><CloudUpload size={17}/>{t("media")} <span className="soon">{t("comingSoon")}</span></button>
+      <button className="nav-item" onClick={() => setShowMedia(true)}><CloudUpload size={17}/>{t("media")}</button>
       <div className="sidebar-bottom"><div className="privacy"><ShieldCheck size={16}/><span>{t("privacyNote")}</span></div><div className="version">{t("webEdition")} · 0.1.0</div></div>
     </aside>
     <main className="main">
@@ -47,6 +49,7 @@ export default function App() {
       <section className="hero"><div className="hero-copy"><div className="eyebrow"><span/> {t("eyebrow")}</div><h1>{t("headline")}</h1><p>{t("subheadline")}</p><div className="hero-actions"><button className="primary" onClick={() => setShowCreate(true)}><Plus size={17}/>{t("newProject")}</button><button className="secondary" onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}><FolderOpen size={17}/>{t("openProject")}</button></div></div><div className="hero-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="planet"><Aperture size={76} strokeWidth={1.1}/></div><div className="float-tag tag-top"><Sparkles size={14}/> {t("immersiveTag")}</div></div></section>
       <section className="mode-section"><div className="section-heading"><div><div className="eyebrow muted">{t("projectWorkflow")}</div><h2>{t("chooseMode")}</h2></div><span className="step">01 <i/> 03</span></div><div className="mode-grid">{modeKeys.map(item => { const Icon = modeIcons[item.id]; return <button key={item.id} className={`mode-card ${mode === item.id ? "selected" : ""}`} onClick={() => setMode(item.id)}><div className="mode-icon"><Icon size={21}/></div><div className="mode-title">{t(item.title)}</div><p>{t(item.description)}</p><div className="mode-select">{mode === item.id ? <><CheckCircle2 size={16}/> {t("selected")}</> : t("selectMode")}</div></button>; })}</div><div className="mode-footer"><div className="privacy-inline"><ShieldCheck size={16}/>{t("privacyNote")}</div><button className="primary" onClick={() => setShowCreate(true)}>{t("start")}<ChevronRight size={17}/></button></div></section>
       <section className="projects-section" id="projects"><div className="section-heading"><div><div className="eyebrow muted">{t("yourWork")}</div><h2>{t("projects")}</h2></div><button className="text-button" onClick={() => setShowCreate(true)}><Plus size={16}/>{t("newProject")}</button></div>{projects.length === 0 ? <div className="empty"><div className="empty-icon"><FolderOpen size={24}/></div><strong>{t("noProjects")}</strong><span>{t("localFirst")}</span></div> : <div className="project-list">{projects.map(project => <button className="project-row" key={project.id} onClick={() => { setActiveProject(project); setMode(project.mode); }}><div className="project-symbol"><Aperture size={20}/></div><div className="project-info"><strong>{project.name}</strong><span>{t(project.mode === "ai" ? "aiMode" : project.mode === "manual" ? "manualMode" : "collabMode")} · {new Date(project.updatedAt).toLocaleDateString()}</span></div><ChevronRight size={18}/></button>)}</div>}</section>
+      {showMedia && <MediaStudio language={language} onBack={() => setShowMedia(false)} />}
       {activeProject && <section className="active-project"><div><div className="eyebrow muted">{t("activeProject")}</div><h2>{activeProject.name}</h2><p>{t("comingSoon")}: editor modules are being implemented in stages.</p></div><button className="secondary" onClick={() => setActiveProject(null)}>{t("cancel")}</button></section>}
       <footer><span>© 2026 SUNNATILLO 360° STUDIO</span><span>{t("portableTag")}</span></footer>
     </main>
