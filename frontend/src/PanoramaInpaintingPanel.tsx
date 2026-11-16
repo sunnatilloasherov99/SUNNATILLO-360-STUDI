@@ -122,7 +122,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
   }
 
   function paint(event: React.PointerEvent<HTMLCanvasElement>) {
-    if (!drawing.current) return;
+    if (working || !drawing.current) return;
     const canvas = event.currentTarget;
     const context = canvas.getContext("2d");
     if (!context) return;
@@ -141,6 +141,20 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     if (!window.confirm(t.confirm)) return;
     const requestId = requestVersion.current;
     const requestedImageUrl = imageUrl;
+    // Freeze the exact mask the user confirmed. Further pointer events are
+    // ignored while this request is running, so the uploaded mask cannot
+    // silently differ from the consent prompt.
+    const binaryMask = document.createElement("canvas");
+    binaryMask.width = canvas.width;
+    binaryMask.height = canvas.height;
+    const maskContext = binaryMask.getContext("2d");
+    if (!maskContext) { setMessage(t.unavailable); return; }
+    maskContext.fillStyle = "#000000";
+    maskContext.fillRect(0, 0, binaryMask.width, binaryMask.height);
+    maskContext.drawImage(canvas, 0, 0);
+    const maskBlob = await new Promise<Blob>((resolve, reject) =>
+      binaryMask.toBlob(blob => blob ? resolve(blob) : reject(new Error("Mask encode failed")), "image/png")
+    );
     setWorking(true);
     setMessage("");
     try {
@@ -149,20 +163,6 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
       const sourceBlob = await sourceResponse.blob();
       if (requestId !== requestVersion.current) return;
 
-      // Providers expect a conventional binary mask: black outside the repair
-      // area and white inside it. The visible drawing canvas is transparent
-      // outside the brush strokes, so normalize it before sending.
-      const binaryMask = document.createElement("canvas");
-      binaryMask.width = canvas.width;
-      binaryMask.height = canvas.height;
-      const maskContext = binaryMask.getContext("2d");
-      if (!maskContext) throw new Error("Mask canvas unavailable");
-      maskContext.fillStyle = "#000000";
-      maskContext.fillRect(0, 0, binaryMask.width, binaryMask.height);
-      maskContext.drawImage(canvas, 0, 0);
-      const maskBlob = await new Promise<Blob>((resolve, reject) =>
-        binaryMask.toBlob(blob => blob ? resolve(blob) : reject(new Error("Mask encode failed")), "image/png")
-      );
       const form = new FormData();
       form.append("image", sourceBlob, "panorama.jpg");
       form.append("mask", maskBlob, "mask.png");
@@ -192,8 +192,8 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     <h3>{t.title}</h3>
     <p>{t.intro}</p>
     <div className="inpainting-controls">
-      <label>{t.brush}: {brush}px <input type="range" min="8" max="120" step="2" value={brush} onChange={event => setBrush(Number(event.target.value))} /></label>
-      <button className="secondary" type="button" onClick={() => {
+      <label>{t.brush}: {brush}px <input type="range" min="8" max="120" step="2" value={brush} onChange={event => setBrush(Number(event.target.value))} disabled={working} /></label>
+      <button className="secondary" type="button" disabled={working} onClick={() => {
         const canvas = canvasRef.current;
         canvas?.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
         setHasMask(false);
@@ -203,7 +203,7 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     </div>
     <div className="inpainting-canvas-wrap" style={{ aspectRatio: dimensions.width && dimensions.height ? dimensions.width + "/" + dimensions.height : "2 / 1" }}>
       <img src={imageUrl} alt={t.before} />
-      <canvas ref={canvasRef} onPointerDown={event => { drawing.current = true; event.currentTarget.setPointerCapture(event.pointerId); paint(event); }} onPointerMove={paint} onPointerUp={() => { drawing.current = false; }} onPointerCancel={() => { drawing.current = false; }} />
+      <canvas ref={canvasRef} onPointerDown={event => { if (working) return; drawing.current = true; event.currentTarget.setPointerCapture(event.pointerId); paint(event); }} onPointerMove={paint} onPointerUp={() => { drawing.current = false; }} onPointerCancel={() => { drawing.current = false; }} />
     </div>
     {resultUrl && <div className="inpainting-result">
       <h4>{t.after}</h4>
