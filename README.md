@@ -22,7 +22,8 @@ An independent, portable web platform for professional 360° media workflows and
 - Original imported panorama is not modified.
 - Non-destructive brightness, contrast and saturation adjustments can be previewed and saved per project.
 - Export adjusted panorama images as new JPEG files while preserving the uploaded original.
-- Build private multi-scene virtual tours from uploaded panoramas, reorder scenes and connect them with clickable in-view hotspots.
+- Build multi-scene virtual tours from uploaded panoramas, reorder scenes and connect them with clickable in-view hotspots.
+- Create revocable public tour links; public viewers can navigate scenes and hotspots without logging in.
 - Run project quality checks for image integrity, 2:1 panorama ratio, recommended resolution and broken tour links.
 - Download an authenticated ZIP archive containing project metadata, tour configuration, edit settings and original media.
 - Manual PostgreSQL and media-volume backup/restore scripts with SHA-256 checksums.
