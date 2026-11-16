@@ -17,7 +17,8 @@ An independent, portable web platform for professional 360° media workflows and
 - Uzbek, Russian and English language selector with persistent preference.
 - Three project startup modes: AI Professional, Manual Professional and AI Collaboration.
 - Server-backed project creation and listing through the FastAPI API.
-- First 360° media workspace: import a JPG/PNG/WebP panorama, inspect dimensions and aspect ratio, and interactively look around a 2:1 equirectangular panorama.
+- 360° photo workspace: import JPG/PNG/WebP panoramas, inspect dimensions and aspect ratio, and interactively look around 2:1 equirectangular images.
+- Initial 360° video workspace: upload MP4/WebM, preview equirectangular footage on an interactive Three.js sphere, drag to look around and use playback controls.
 - Original imported panorama is not modified.
 - Non-destructive brightness, contrast and saturation adjustments can be previewed and saved per project.
 - Export adjusted panorama images as new JPEG files while preserving the uploaded original.
@@ -27,7 +28,7 @@ An independent, portable web platform for professional 360° media workflows and
 - Optional local Ollama AI specialists for panorama advice, tour planning, scene descriptions and stitching guidance; no paid AI key is required.
 - FastAPI health and capability endpoints.
 - Server-side project create/list/delete API backed by SQLAlchemy and PostgreSQL (SQLite is available for local development).
-- Persistent JPEG/PNG/WebP media upload, listing and file delivery endpoints with a configurable upload limit.
+- Persistent JPEG/PNG/WebP and MP4/WebM media upload, listing and file delivery endpoints with a configurable upload limit.
 - Docker Compose stores uploaded media in a dedicated persistent volume, separate from the database volume.
 - Docker Compose baseline with PostgreSQL.
 - GitHub Actions frontend build and backend syntax checks.
