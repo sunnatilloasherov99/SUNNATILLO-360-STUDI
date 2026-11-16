@@ -40,5 +40,39 @@ jobs:
           JWT_SECRET: ci-test-secret-not-for-deployment-0123456789
           DATABASE_URL: sqlite:///./migration-check.db
           MEDIA_STORAGE_PATH: ./migration-media
+      - name: Verify migration of an existing database
+        run: |
+          python - <<'PY'
+          import sqlite3
+          connection = sqlite3.connect("legacy-check.db")
+          connection.executescript("""
+          CREATE TABLE projects (
+            id VARCHAR(36) PRIMARY KEY,
+            owner_id VARCHAR(36),
+            name VARCHAR(160) NOT NULL,
+            mode VARCHAR(16) NOT NULL,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            edit_settings_json TEXT NOT NULL DEFAULT '{}',
+            tour_json TEXT NOT NULL DEFAULT '{}'
+          );
+          CREATE TABLE media_assets (
+            id VARCHAR(36) PRIMARY KEY,
+            project_id VARCHAR(36) NOT NULL,
+            original_name VARCHAR(255) NOT NULL,
+            stored_name VARCHAR(80) NOT NULL UNIQUE,
+            content_type VARCHAR(100) NOT NULL,
+            size_bytes INTEGER NOT NULL,
+            created_at DATETIME NOT NULL
+          );
+          """)
+          connection.close()
+          PY
+          alembic upgrade head
+        env:
+          ENVIRONMENT: production
+          JWT_SECRET: ci-test-secret-not-for-deployment-0123456789
+          DATABASE_URL: sqlite:///./legacy-check.db
+          MEDIA_STORAGE_PATH: ./legacy-media
       - run: python -m compileall -q app
       - run: pytest -q
