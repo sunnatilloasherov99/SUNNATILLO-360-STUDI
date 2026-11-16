@@ -57,6 +57,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] Panorama yoki token almashganda avvalgi AI so‘rovining kechikib kelgan javobi yangi rasm holatini bosib ketmasligi uchun request-version guard qo‘shildi (commit `a769b83`).
 - [x] AI natijasini qabul qilish paytida panorama almashtirilsa, eski natija yangi panorama ustiga qo‘llanmasligi uchun qabul amali ham request-version bilan himoyalandi (commit `3318445`).
 - [x] AI maska muharririda konteyner balandligi bilan rasm nisbatini buzib, maskani tasvirga nisbatan siljitishi mumkin bo‘lgan `max-height` cheklovi olib tashlandi (commit `ba4c32e`).
+- [x] Yangi panorama yuklanayotganda avvalgi rasmning o‘lchamlari va maska canvas’i vaqtincha o‘chirilib, eski maskaning yangi rasmga yuborilishi oldi olindi (commit `7893742`).
 
 ### 5.4 Eksport va qabul sinovlari
 - [x] AI natijasi → rang/yorug‘lik → clone brush qatlamasi → chok sozlamalari → JPEG eksport yagona render pipeline orqali bajariladi.
