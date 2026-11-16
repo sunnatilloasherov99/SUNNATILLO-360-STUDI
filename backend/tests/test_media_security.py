@@ -47,6 +47,7 @@ def client(tmp_path, monkeypatch) -> Generator[TestClient, None, None]:
 def register(client: TestClient, email: str) -> str:
     response = client.post(
         "/api/auth/register",
+        headers={"X-Real-IP": f"test-{email}"},
         json={"email": email, "password": "SafePass-12345"},
     )
     assert response.status_code == 201, response.text
