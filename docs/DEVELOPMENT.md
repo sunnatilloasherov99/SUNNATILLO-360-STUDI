@@ -53,7 +53,7 @@ Run these from the `infra/` directory on a Linux host with Docker Compose:
 bash backup.sh
 bash restore.sh ../backups/studio-db-TIMESTAMP.dump ../backups/studio-media-TIMESTAMP.tar.gz
 ```
-Backups include a PostgreSQL custom-format dump, original media archive and SHA-256 checksums. Store copies off-server in encrypted storage. Restore replaces the current database and media; the script requires typing `RESTORE` before proceeding. Put the public site behind HTTPS; restrict direct public access to the API/database ports with firewall rules and expose the web entry point through a reverse proxy where appropriate.
+Backups include a PostgreSQL custom-format dump, original media archive and SHA-256 checksums. Store copies off-server in encrypted storage. Restore replaces the current database and media; the script requires typing `RESTORE` before proceeding. Only the web service publishes a host port; the API, PostgreSQL and Redis stay on the private Docker network. Put the web entry point behind HTTPS and keep SSH/firewall access restricted.
 
 ## Implemented boundaries
 - Account registration/login and per-user project/media access control.
