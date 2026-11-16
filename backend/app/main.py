@@ -242,7 +242,7 @@ class EditorSettings(BaseModel):
 
 
 class AIRequest(BaseModel):
-    role: Literal["panorama_quality", "tour_planner", "tour_description", "stitching_advisor"]
+    role: Literal["panorama_quality", "tour_planner", "tour_description", "stitching_advisor", "collaboration"]
     prompt: str = Field(min_length=1, max_length=4000)
     context: str = Field(default="", max_length=10000)
     language: Literal["uz", "ru", "en"] = "uz"
@@ -602,44 +602,67 @@ async def ai_assist(payload: AIRequest, user: User = Depends(current_user), db: 
             detail="Local AI is not configured. Install Ollama and set OLLAMA_BASE_URL in the server environment.",
         )
     language_names = {"uz": "Uzbek", "ru": "Russian", "en": "English"}
-    system_prompt = (
-        f"{AI_ROLE_PROMPTS[payload.role]} "
-        f"Respond in {language_names[payload.language]}. "
-        "Be honest about uncertainty. Do not fabricate visual observations or platform publishing permissions."
-    )
     user_content = payload.prompt.strip()
     if payload.context.strip():
         user_content += "\n\nUser-provided context (only this text was shared):\n" + payload.context.strip()
+    user_message = {
+        "role": "user",
+        "content": user_content + ("\n\nPlease inspect the attached image." if image_base64 else ""),
+        **({"images": [image_base64]} if image_base64 else {}),
+    }
     url = settings.ollama_base_url.rstrip("/") + "/api/chat"
     try:
         async with httpx.AsyncClient(timeout=settings.ollama_timeout_seconds) as client:
-            response = await client.post(
-                url,
-                json={
-                    "model": settings.ollama_model,
-                    "stream": False,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {
-                            "role": "user",
-                            "content": user_content + ("\n\nPlease inspect the attached image." if image_base64 else ""),
-                            **({"images": [image_base64]} if image_base64 else {}),
-                        },
-                    ],
-                },
-            )
-            response.raise_for_status()
-            result = response.json()
+            if payload.role == "collaboration":
+                team_roles = ["panorama_quality", "stitching_advisor", "tour_planner"]
+                async def ask_specialist(role_name: str):
+                    system = (
+                        f"{AI_ROLE_PROMPTS[role_name]} "
+                        f"Respond in {language_names[payload.language]}. "
+                        "Be honest about uncertainty and never invent visual observations."
+                    )
+                    response = await client.post(
+                        url,
+                        json={"model": settings.ollama_model, "stream": False, "messages": [
+                            {"role": "system", "content": system}, user_message
+                        ]},
+                    )
+                    response.raise_for_status()
+                    content = response.json().get("message", {}).get("content", "").strip()
+                    if not content:
+                        raise HTTPException(status_code=502, detail="A local AI specialist returned an empty response.")
+                    return content
+                reports = await asyncio.gather(*(ask_specialist(role_name) for role_name in team_roles))
+                headings = {
+                    "uz": ["360° sifat mutaxassisi", "Stitching mutaxassisi", "Virtual tur rejissyori"],
+                    "ru": ["Аналитик качества 360°", "Специалист по склейке", "Режиссёр виртуального тура"],
+                    "en": ["360° quality analyst", "Stitching specialist", "Virtual tour planner"],
+                }[payload.language]
+                output = "\n\n".join(f"### {heading}\n{report}" for heading, report in zip(headings, reports))
+            else:
+                system_prompt = (
+                    f"{AI_ROLE_PROMPTS[payload.role]} "
+                    f"Respond in {language_names[payload.language]}. "
+                    "Be honest about uncertainty. Do not fabricate visual observations or platform publishing permissions."
+                )
+                response = await client.post(
+                    url,
+                    json={"model": settings.ollama_model, "stream": False, "messages": [
+                        {"role": "system", "content": system_prompt}, user_message
+                    ]},
+                )
+                response.raise_for_status()
+                output = response.json().get("message", {}).get("content", "").strip()
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail="The local AI model took too long to respond.")
     except httpx.HTTPStatusError:
         raise HTTPException(status_code=502, detail="The local AI service returned an error.")
     except httpx.RequestError:
         raise HTTPException(status_code=503, detail="Could not connect to the local Ollama service.")
-    output = result.get("message", {}).get("content", "").strip()
     if not output:
         raise HTTPException(status_code=502, detail="The local AI service returned an empty response.")
     return {"provider": "ollama", "model": settings.ollama_model, "role": payload.role, "output": output, "image_analyzed": bool(image_base64)}
+
 
 
 @app.get("/api/projects/{project_id}/quality")
