@@ -708,6 +708,7 @@ def ai_capabilities(user: User = Depends(current_user)):
     return {
         "providers": [{"id": "ollama", "name": "Ollama (local)", "configured": bool(settings.ollama_base_url), "model": settings.ollama_model}],
         "roles": [*AI_ROLE_PROMPTS.keys(), "collaboration"],
+        "media_analysis": {"images": True, "video_keyframes": True, "video_frame_count": 3, "max_video_minutes": 30},
         "external_data_sent": False,
     }
 
