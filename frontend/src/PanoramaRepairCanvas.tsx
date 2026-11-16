@@ -27,9 +27,12 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
  const [notice,setNotice]=useState("");
 
  useEffect(()=>{
-  sourceRef.current=null;undoRef.current=[];redoRef.current=[];setSourceMode(false);setSourceLabel(t.noSource);setUndoCount(0);setRedoCount(0);setNotice("");
-  const canvas=patchCanvasRef.current;const image=imageRef.current;
-  if(canvas&&image&&image.complete&&image.naturalWidth){canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;canvas.getContext("2d")?.clearRect(0,0,canvas.width,canvas.height);}
+  // A new source image starts a completely new repair session.
+  drawingRef.current=false;lastPointRef.current=null;strokeStartRef.current=null;
+  sourceRef.current=null;undoRef.current=[];redoRef.current=[];
+  setSourceMode(false);setSourceLabel(t.noSource);setUndoCount(0);setRedoCount(0);setNotice("");
+  const canvas=patchCanvasRef.current;
+  if(canvas){canvas.width=0;canvas.height=0;}
  },[imageUrl]);
 
  function snapshot(){
@@ -115,8 +118,8 @@ export default function PanoramaRepairCanvas({ imageUrl, language, patchCanvasRe
   </div></div>
   <label className="panorama-brush-control">{t.brush}<input type="range" min="8" max="160" step="4" value={brushSize} onChange={e=>setBrushSize(Number(e.target.value))}/><span>{brushSize}px</span></label>
   <div className="panorama-repair-image" style={{touchAction:"none"}}>
-   <img ref={imageRef} src={imageUrl} alt="Panorama repair source" onLoad={e=>{const canvas=patchCanvasRef.current;if(canvas){canvas.width=e.currentTarget.naturalWidth;canvas.height=e.currentTarget.naturalHeight;}}}/>
-   <canvas ref={patchCanvasRef} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} aria-label={t.title}/>
+   <img ref={imageRef} src={imageUrl} alt="Panorama repair source" onLoad={e=>{const canvas=patchCanvasRef.current;if(canvas&&e.currentTarget.naturalWidth&&e.currentTarget.naturalHeight){canvas.width=e.currentTarget.naturalWidth;canvas.height=e.currentTarget.naturalHeight;}}}/>
+   <canvas ref={patchCanvasRef} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onLostPointerCapture={onPointerUp} aria-label={t.title}/>
   </div>
   <div className="panorama-repair-status">{sourceMode?t.source+"…":sourceRef.current?t.sourceReady+": "+sourceLabel:t.noSource}{notice&&" · "+notice}</div>
   <p>{t.hint}</p><small>{t.disclaimer}</small>
