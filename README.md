@@ -22,11 +22,11 @@ An independent, portable web platform for professional 360° media workflows and
 - Save non-destructive 360° video trim in/out markers per project, preview the selected range and export the trimmed result as MP4 with server-side FFmpeg; the original video remains unchanged.
 - Original imported panorama is not modified.
 - Non-destructive brightness, contrast and saturation adjustments can be previewed and saved per project.
-- Horizontal seam repositioning can be previewed and exported to a new JPEG without overwriting the source; it moves the panorama edge but does not reconstruct missing pixels.
+- Assisted panorama seam repair: estimate the lowest-contrast vertical seam position, manually reposition it, and apply adjustable 0–5% edge feather blending. Preview and export a new JPEG without overwriting the original; this softens outer-edge colour transitions but does not reconstruct missing pixels or correct internal parallax.
 - Export adjusted panorama images as new JPEG files while preserving the uploaded original.
 - Build multi-scene virtual tours from uploaded panoramas, reorder scenes and connect them with clickable in-view hotspots.
 - Create revocable public tour links; public viewers can navigate scenes and hotspots without logging in.
-- Run project quality checks for image integrity, 2:1 panorama ratio, recommended resolution and broken tour links.
+- Run project quality checks for image integrity, 2:1 panorama ratio, recommended resolution, estimated left/right edge colour discontinuity and broken tour links.
 - Download an authenticated ZIP archive containing project metadata, tour configuration, edit settings and original media.
 - Manual PostgreSQL and media-volume backup/restore scripts with SHA-256 checksums.
 - Redis-backed request rate limits for registration, login and AI requests.
@@ -49,7 +49,7 @@ An independent, portable web platform for professional 360° media workflows and
 - Yandex Maps and 2GIS publishing adapters.
 - Scheduled automatic backups, automated restore drills and desktop packaging.
 
-The current panorama viewer is a first editing milestone, not a complete professional editor or a direct publishing tool.
+The panorama workspace includes assisted outer-seam positioning, feather blending and quality estimates. It is not a full multi-image stitching/reconstruction system or a complete professional editor, and it is not a direct publishing tool.
 
 ## Repository layout
 - `frontend/` — React + TypeScript web application.
