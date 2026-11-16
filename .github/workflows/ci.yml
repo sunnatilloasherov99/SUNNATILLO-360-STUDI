@@ -76,3 +76,14 @@ jobs:
           MEDIA_STORAGE_PATH: ./legacy-media
       - run: python -m compileall -q app
       - run: pytest -q
+
+  infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check backup script syntax
+        run: bash -n infra/backup.sh infra/restore.sh
+      - name: Validate Docker Compose configuration
+        run: |
+          cp infra/.env.example infra/.env
+          docker compose -f infra/docker-compose.yml config --quiet
