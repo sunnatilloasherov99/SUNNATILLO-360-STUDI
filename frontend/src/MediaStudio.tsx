@@ -82,7 +82,9 @@ export default function MediaStudio({ token, language, projectId, projectName, p
   const canvas=document.createElement("canvas");canvas.width=source.width;canvas.height=source.height;
   const context=canvas.getContext("2d");if(!context)throw new Error("Canvas unavailable");
   context.filter="brightness("+settings.brightness+") contrast("+settings.contrast+") saturate("+settings.saturation+")";
-  context.drawImage(source,0,0);\n  const repairLayer=patchCanvasRef.current;if(repairLayer&&repairLayer.width===source.width&&repairLayer.height===source.height)context.drawImage(repairLayer,0,0);\n  source.close();
+  context.drawImage(source,0,0);
+  const repairLayer=patchCanvasRef.current;if(repairLayer&&repairLayer.width===source.width&&repairLayer.height===source.height)context.drawImage(repairLayer,0,0);
+  source.close();
   let outputCanvas:HTMLCanvasElement=canvas;
   if(settings.seamOffset>0){
    const shift=Math.round(canvas.width*settings.seamOffset/360);
