@@ -47,6 +47,8 @@ def upgrade() -> None:
             sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
             sa.Column("edit_settings_json", sa.Text(), nullable=False, server_default="{}"),
             sa.Column("tour_json", sa.Text(), nullable=False, server_default="{}"),
+            sa.Column("is_public", sa.Boolean(), nullable=False, server_default=sa.false()),
+            sa.Column("share_token", sa.String(length=64), nullable=True),
         )
     else:
         existing = _columns("projects")
@@ -57,6 +59,10 @@ def upgrade() -> None:
             missing.append(sa.Column("edit_settings_json", sa.Text(), nullable=False, server_default="{}"))
         if "tour_json" not in existing:
             missing.append(sa.Column("tour_json", sa.Text(), nullable=False, server_default="{}"))
+        if "is_public" not in existing:
+            missing.append(sa.Column("is_public", sa.Boolean(), nullable=False, server_default=sa.false()))
+        if "share_token" not in existing:
+            missing.append(sa.Column("share_token", sa.String(length=64), nullable=True))
         if missing:
             with op.batch_alter_table("projects") as batch:
                 for column in missing:
@@ -87,6 +93,7 @@ def upgrade() -> None:
     for table_name, index_name, columns, unique in (
         ("users", "ix_users_email", ["email"], True),
         ("projects", "ix_projects_owner_id", ["owner_id"], False),
+        ("projects", "ix_projects_share_token", ["share_token"], True),
         ("media_assets", "ix_media_assets_project_id", ["project_id"], False),
     ):
         if index_name not in _indexes(table_name):
