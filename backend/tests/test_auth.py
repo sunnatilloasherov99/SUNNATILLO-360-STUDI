@@ -443,6 +443,7 @@ def test_local_inpainting_uses_configured_provider_and_returns_valid_image(clien
 
 
 def test_uploaded_original_media_is_immutable_and_private(client: TestClient) -> None:
+    client.headers.update({"X-Real-IP": "198.51.100.91"})
     owner_token = register(client, "media-owner@example.com")
     other_token = register(client, "media-other@example.com")
     project = client.post(
@@ -481,6 +482,7 @@ def test_uploaded_original_media_is_immutable_and_private(client: TestClient) ->
 
 
 def test_media_upload_rejects_mismatched_image_signature(client: TestClient) -> None:
+    client.headers.update({"X-Real-IP": "198.51.100.92"})
     token = register(client, "invalid-media@example.com")
     project = client.post(
         "/api/projects",
