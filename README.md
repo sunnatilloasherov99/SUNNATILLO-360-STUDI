@@ -32,7 +32,7 @@ An independent, portable web platform for professional 360° media workflows and
 - Persistent JPEG/PNG/WebP and MP4/WebM media upload, listing and file delivery endpoints with a configurable upload limit.
 - Docker Compose stores uploaded media in a dedicated persistent volume, separate from the database volume.
 - Docker Compose baseline with PostgreSQL.
-- GitHub Actions frontend build and backend syntax checks.
+- GitHub Actions frontend build, backend API tests, fresh/legacy database migration checks, backup script syntax and Docker Compose validation.
 
 ### Not implemented yet
 - Production hardening still required before public launch: rate limiting/abuse protection, email verification/password reset, HTTPS and production secrets.
