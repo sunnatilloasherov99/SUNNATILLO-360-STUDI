@@ -917,28 +917,29 @@ def check_project_quality(project_id: str, user: User = Depends(current_user), d
             "params": {"name": asset.original_name, "format": image_format or "unknown"},
             "message": f"{asset.original_name}: {image_format or 'unknown'}",
         })
-        with Image.open(path) as image:
-            preview = image.convert("RGB").resize(
-                (min(512, width), min(256, height)),
-                Image.Resampling.LANCZOS,
-            )
-            pixels = preview.load()
-            sample_start = max(0, int(preview.height * 0.08))
-            sample_end = max(sample_start + 1, int(preview.height * 0.92))
-            differences = []
-            for y in range(sample_start, min(sample_end, preview.height)):
-                left = pixels[0, y]
-                right = pixels[preview.width - 1, y]
-                differences.append(sum(abs(left[channel] - right[channel]) for channel in range(3)) / 3)
-            seam_score = sum(differences) / len(differences) if differences else 0.0
-        seam_level = "low" if seam_score < 20 else "medium" if seam_score < 45 else "high"
-        checks.append({
-            "id": f"media-{asset.id}-seam",
-            "code": "seam_continuity",
-            "status": "pass" if seam_level == "low" else "warning",
-            "params": {"name": asset.original_name, "score": round(seam_score, 1), "level": seam_level},
-            "message": f"{asset.original_name}: estimated edge colour difference {seam_score:.1f}/255 ({seam_level})",
-        })
+        if abs(width / height - 2) < 0.02:
+            with Image.open(path) as image:
+                preview = image.convert("RGB").resize(
+                    (min(512, width), min(256, height)),
+                    Image.Resampling.LANCZOS,
+                )
+                pixels = preview.load()
+                sample_start = max(0, int(preview.height * 0.08))
+                sample_end = max(sample_start + 1, int(preview.height * 0.92))
+                differences = []
+                for y in range(sample_start, min(sample_end, preview.height)):
+                    left = pixels[0, y]
+                    right = pixels[preview.width - 1, y]
+                    differences.append(sum(abs(left[channel] - right[channel]) for channel in range(3)) / 3)
+                seam_score = sum(differences) / len(differences) if differences else 0.0
+            seam_level = "low" if seam_score < 20 else "medium" if seam_score < 45 else "high"
+            checks.append({
+                "id": f"media-{asset.id}-seam",
+                "code": "seam_continuity",
+                "status": "pass" if seam_level == "low" else "warning",
+                "params": {"name": asset.original_name, "score": round(seam_score, 1), "level": seam_level},
+                "message": f"{asset.original_name}: estimated edge colour difference {seam_score:.1f}/255 ({seam_level})",
+            })
     if not assets:
         checks.append({"id": "media-present", "code": "no_media", "status": "warning", "params": {}, "message": "No panorama images have been uploaded yet."})
     try:
