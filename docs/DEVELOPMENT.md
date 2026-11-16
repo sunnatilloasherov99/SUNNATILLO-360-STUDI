@@ -45,7 +45,7 @@ cd infra
 docker compose up -d --build
 ```
 
-The API container runs `alembic upgrade head` before starting FastAPI. PostgreSQL and media files use separate persistent Docker volumes.
+The API container runs `alembic upgrade head` before starting FastAPI. Docker Compose also starts a private Redis service for shared request rate limits; local development defaults to in-memory limits. PostgreSQL and media files use separate persistent Docker volumes.
 
 ### Backup and restore
 Run these from the `infra/` directory on a Linux host with Docker Compose:
