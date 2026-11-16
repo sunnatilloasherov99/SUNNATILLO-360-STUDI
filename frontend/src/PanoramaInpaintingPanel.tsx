@@ -212,7 +212,24 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
       <h4>{t.after}</h4>
       <div className="inpainting-preview"><div><strong>{t.before}</strong><img src={imageUrl} alt={t.before} /></div><div><strong>{t.after}</strong><img src={resultUrl} alt={t.after} /></div></div>
       <div className="editor-actions">
-        <button className="primary" type="button" onClick={async () => { const response = await fetch(resultUrl); onAccept(await response.blob()); setResultUrl(current => { if (current) URL.revokeObjectURL(current); return null; }); }}>{t.accept}</button>
+        <button className="primary" type="button" disabled={working} onClick={async () => {
+          const acceptRequestId = requestVersion.current;
+          const acceptedUrl = resultUrl;
+          try {
+            const response = await fetch(acceptedUrl);
+            if (!response.ok) throw new Error("AI result is no longer available");
+            const blob = await response.blob();
+            // Do not apply a result after the user has switched panoramas.
+            if (acceptRequestId !== requestVersion.current || acceptedUrl !== resultUrl) return;
+            onAccept(blob);
+            setResultUrl(current => {
+              if (current) URL.revokeObjectURL(current);
+              return null;
+            });
+          } catch {
+            if (acceptRequestId === requestVersion.current) setMessage(t.unavailable);
+          }
+        }}>{t.accept}</button>
         <button className="secondary" type="button" onClick={() => setResultUrl(current => { if (current) URL.revokeObjectURL(current); return null; })}>{t.reject}</button>
       </div>
     </div>}
