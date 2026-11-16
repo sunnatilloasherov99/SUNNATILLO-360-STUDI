@@ -102,3 +102,9 @@
 .video-controls input[type=range]{flex:1;min-width:100px;accent-color:var(--accent,#8b9cff)}
 .video-controls span{font-size:11px;color:#9db0cc;font-variant-numeric:tabular-nums;white-space:nowrap}
 @media(max-width:680px){.video-studio{padding:14px;margin:18px 0}.video-360-stage{height:46vh;min-height:250px}.video-controls{gap:7px}.video-controls .secondary{padding:9px}}
+
+.tour-share-panel{display:grid;gap:12px;margin:20px 0;padding:18px;border:1px solid var(--line,rgba(255,255,255,.1));border-radius:16px;background:rgba(255,255,255,.025)}
+.tour-share-panel p{margin:6px 0 0;font-size:13px;line-height:1.5;opacity:.7}
+.tour-share-link{display:flex;gap:10px;min-width:0}
+.tour-share-link input{flex:1;min-width:0}
+@media(max-width:560px){.tour-share-link{flex-direction:column}}
