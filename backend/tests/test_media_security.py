@@ -217,6 +217,46 @@ def test_public_tour_link_can_be_revoked(client: TestClient) -> None:
     ).status_code == 404
 
 
+
+def test_video_export_is_private_and_requires_ffmpeg(client: TestClient, monkeypatch) -> None:
+    owner_token = register(client, "video-export-owner@example.com")
+    other_token = register(client, "video-export-other@example.com")
+    project_id = create_project(client, owner_token)
+    headers = {"Authorization": f"Bearer {owner_token}"}
+    uploaded = client.post(
+        f"/api/projects/{project_id}/media",
+        headers=headers,
+        files={"file": ("walkthrough.mp4", b"\\x00\\x00\\x00\\x18ftypisom\\x00\\x00\\x02\\x00isomiso2", "video/mp4")},
+    )
+    assert uploaded.status_code == 201, uploaded.text
+    media_id = uploaded.json()["id"]
+
+    export_url = f"/api/projects/{project_id}/video-export"
+    assert client.post(
+        export_url,
+        headers={"Authorization": f"Bearer {other_token}"},
+        json={"media_id": media_id},
+    ).status_code == 404
+
+    monkeypatch.setattr(main.shutil, "which", lambda _name: None)
+    unavailable = client.post(export_url, headers=headers, json={"media_id": media_id})
+    assert unavailable.status_code == 503
+    assert "FFmpeg" in unavailable.json()["detail"]
+
+
+def test_video_export_rejects_image_assets(client: TestClient, monkeypatch) -> None:
+    token = register(client, "video-export-image@example.com")
+    project_id = create_project(client, token)
+    media_id = upload_png(client, token, project_id)
+    monkeypatch.setattr(main.shutil, "which", lambda _name: "/usr/bin/ffmpeg")
+    response = client.post(
+        f"/api/projects/{project_id}/video-export",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"media_id": media_id},
+    )
+    assert response.status_code == 404
+
+
 def test_video_trim_settings_are_private_validated_and_persisted(client: TestClient) -> None:
     owner_token = register(client, "video-settings-owner@example.com")
     other_token = register(client, "video-settings-other@example.com")
