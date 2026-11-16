@@ -136,6 +136,34 @@ def upload_png(client: TestClient, token: str, project_id: str) -> str:
     return response.json()["id"]
 
 
+def test_editor_settings_validate_and_persist_seam_blend(client: TestClient) -> None:
+    owner_token = register(client, "seam-blend-owner@example.com")
+    other_token = register(client, "seam-blend-other@example.com")
+    project_id = create_project(client, owner_token)
+    url = f"/api/projects/{project_id}/editor-settings"
+    headers = {"Authorization": f"Bearer {owner_token}"}
+
+    saved = client.put(
+        url,
+        headers=headers,
+        json={"brightness": 1.1, "contrast": 1.0, "saturation": 1.0, "seam_offset": 25, "seam_blend_percent": 3.5},
+    )
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["seam_blend_percent"] == 3.5
+    assert client.get(url, headers=headers).json()["seam_blend_percent"] == 3.5
+    assert client.get(
+        url,
+        headers={"Authorization": f"Bearer {other_token}"},
+    ).status_code == 404
+
+    invalid = client.put(
+        url,
+        headers=headers,
+        json={"seam_blend_percent": 5.1},
+    )
+    assert invalid.status_code == 422
+
+
 def test_quality_report_estimates_seam_continuity_and_is_private(client: TestClient) -> None:
     owner_token = register(client, "seam-quality-owner@example.com")
     other_token = register(client, "seam-quality-other@example.com")
