@@ -52,6 +52,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] `.env.example` da ixtiyoriy `INPAINTING_ENDPOINT_URL`, `INPAINTING_API_KEY`, `INPAINTING_TIMEOUT_SECONDS` sozlamalari hujjatlashtirildi.
 - [ ] Foydalanuvchi o‘zi sozlagan ComfyUI workflow uchun mos HTTP bridge va real model sinovi. To‘g‘ridan-to‘g‘ri ComfyUI workflow API hali ulanmagan.
 - [x] Frontend’da oq maska cho‘tkasi, AI yuborishdan oldin rozilik oynasi, oldin/keyin preview va natijani qabul/rad etish qo‘shildi (commit `5d6b50b`, `44d87b6`).
+- [x] AI providerga yuboriladigan maska qora fon + oq belgilangan hudud ko‘rinishiga normallashtirildi (commit `3df92da`).
 - [x] `/api/ai/capabilities` orqali provider mavjudligi tekshiriladi; AI tugmasi provider sozlanmagan bo‘lsa o‘chiq, qo‘lda tuzatish vositasi alohida ishlashda davom etadi.
 
 ### 5.4 Eksport va qabul sinovlari
@@ -59,7 +60,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] AI natijasini qabul qilishdan oldin preview qilish va qabul qilingan AI qatlamasini bekor qilib original manbaga qaytish boshqaruvi qo‘shildi.
 - [x] Tahrirlangan nusxa source_asset_id orqali asl media bilan bog‘lanadi; 0002_media_source_asset migratsiyasi va API validatsiyasi qo‘shildi.
 - [x] Original media baytlari o‘zgarmasligi, source asset ownership, noto‘g‘ri MIME/signature va hosila media bog‘lanishi uchun backend testlari qo‘shildi.
-- [ ] GitHub Actions frontend/backend/infrastructure tekshiruvlarini yangi o‘zgarishlar bilan muvaffaqiyatli yakunlash.
+- [x] GitHub Actions frontend/backend/infrastructure tekshiruvlari yangi o‘zgarishlar bilan muvaffaqiyatli yakunlandi (run `43933375111`; barcha 3 job `success`).
 - [ ] Haqiqiy foydalanuvchi panoramalari bilan preview, clone brush, AI natijasi va JPEG eksport sifatini vizual sinash.
 
 **5-bosqichni yopish mezoni:** foydalanuvchi panoramani xavfsiz tekshirib, nuqsonni qo'lda tuzata oladi, kerak bo'lsa ixtiyoriy lokal AI natijasini ko'rib tasdiqlaydi va original faylni saqlagan holda yangi nusxa eksport qiladi.
@@ -110,7 +111,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 
 ## Hozirgi navbatdagi ishlar
 
-1. Yangi source_asset_id migratsiyasi, API va backend testlari CI natijasini tasdiqlash.
+1. AI maska tuzatishi va source_asset_id migratsiyasi, API hamda backend testlari CI natijasini tasdiqlash — bajarildi (run `43933375111`).
 2. 5.3 uchun ComfyUI HTTP bridge va haqiqiy lokal model bilan integratsion sinov.
 3. 5.4 uchun browser darajasida eksport qatlamalari va AI rollback vizual sinovi.
 4. Haqiqiy telefon panoramasi bilan yakuniy qabul sinovi.
