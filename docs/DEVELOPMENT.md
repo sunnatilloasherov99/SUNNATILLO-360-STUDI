@@ -36,7 +36,7 @@ Install Ollama on a machine you control, download a model such as `llama3.2`, th
 - Backend in Docker with Ollama running on the host: `OLLAMA_BASE_URL=http://host.docker.internal:11434`
 - `OLLAMA_MODEL=llama3.2`
 
-No paid API key is required for this local provider. The current AI assistant sends only the prompt and text context that the user explicitly enters; it does not upload images or videos.
+No paid API key is required for this local provider. The AI assistant always sends only the prompt and text context the user enters. A project image is sent only if the user explicitly selects it and presses Ask AI; images are limited to 12 MB and require a vision-capable model such as `llava`. Videos are not sent to AI.
 
 ## Portable Docker deployment
 Copy `infra/.env.example` to `infra/.env`. Set a strong unique PostgreSQL password, a random JWT secret of at least 32 characters, the public frontend origin and any optional Ollama settings. Then run:
