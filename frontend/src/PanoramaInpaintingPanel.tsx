@@ -85,12 +85,18 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
         context?.clearRect(0, 0, canvas.width, canvas.height);
       }
     };
-    image.onerror = () => setMessage(t.unavailable);
+    image.onerror = () => {
+      if (active) setMessage(t.unavailable);
+    };
     image.src = imageUrl;
     void fetch("/api/ai/capabilities", { headers: { Authorization: "Bearer " + token } })
       .then(response => response.ok ? response.json() : null)
-      .then(data => setConfigured(Boolean(data?.panorama_inpainting?.enabled)))
-      .catch(() => setConfigured(false));
+      .then(data => {
+        if (active) setConfigured(Boolean(data?.panorama_inpainting?.enabled));
+      })
+      .catch(() => {
+        if (active) setConfigured(false);
+      });
     setHasMask(false);
     setResultUrl(current => {
       if (current) URL.revokeObjectURL(current);
