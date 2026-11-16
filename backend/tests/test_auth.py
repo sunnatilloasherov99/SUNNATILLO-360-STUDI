@@ -199,3 +199,21 @@ def test_tour_is_private_and_references_owned_media(client: TestClient) -> None:
         headers=bearer(other_token),
     )
     assert private_export.status_code == 404
+
+
+def test_local_ai_is_opt_in_and_requires_authentication(client: TestClient) -> None:
+    unauthenticated = client.get("/api/ai/capabilities")
+    assert unauthenticated.status_code == 401
+
+    token = register(client, "ai-user@example.com")
+    capabilities = client.get("/api/ai/capabilities", headers=bearer(token))
+    assert capabilities.status_code == 200
+    assert capabilities.json()["providers"][0]["id"] == "ollama"
+    assert capabilities.json()["providers"][0]["configured"] is False
+
+    unavailable = client.post(
+        "/api/ai/assist",
+        headers=bearer(token),
+        json={"role": "tour_planner", "prompt": "Plan a small tour", "language": "en"},
+    )
+    assert unavailable.status_code == 503
