@@ -139,6 +139,19 @@ def test_tour_is_private_and_references_owned_media(client: TestClient) -> None:
     assert uploaded.status_code == 201
     media_id = uploaded.json()["id"]
 
+    owner_ai_image = client.post(
+        "/api/ai/assist",
+        headers=bearer(owner_token),
+        json={"role": "panorama_quality", "prompt": "Review this panorama", "media_id": media_id},
+    )
+    assert owner_ai_image.status_code == 503  # Image is valid; Ollama is intentionally not configured in CI.
+    other_ai_image = client.post(
+        "/api/ai/assist",
+        headers=bearer(other_token),
+        json={"role": "panorama_quality", "prompt": "Review this panorama", "media_id": media_id},
+    )
+    assert other_ai_image.status_code == 404
+
     video_upload = client.post(
         f"/api/projects/{project_id}/media",
         headers=bearer(owner_token),
