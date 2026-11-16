@@ -215,3 +215,30 @@ def test_public_tour_link_can_be_revoked(client: TestClient) -> None:
     assert client.get(
         f"/api/public/media/{share_token}/{media_id}"
     ).status_code == 404
+
+
+def test_video_trim_settings_are_private_validated_and_persisted(client: TestClient) -> None:
+    owner_token = register(client, "video-settings-owner@example.com")
+    other_token = register(client, "video-settings-other@example.com")
+    project_id = create_project(client, owner_token)
+    url = f"/api/projects/{project_id}/video-settings"
+    owner_headers = {"Authorization": f"Bearer {owner_token}"}
+    other_headers = {"Authorization": f"Bearer {other_token}"}
+
+    assert client.get(url, headers=other_headers).status_code == 404
+    saved = client.put(
+        url,
+        headers=owner_headers,
+        json={"start_seconds": 5.5, "end_seconds": 42.0},
+    )
+    assert saved.status_code == 200, saved.text
+    assert saved.json() == {"start_seconds": 5.5, "end_seconds": 42.0}
+    assert client.get(url, headers=owner_headers).json() == saved.json()
+
+    invalid = client.put(
+        url,
+        headers=owner_headers,
+        json={"start_seconds": 30, "end_seconds": 20},
+    )
+    assert invalid.status_code == 422
+    assert client.get(url, headers=owner_headers).json() == saved.json()
