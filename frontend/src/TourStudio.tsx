@@ -24,7 +24,7 @@ const copy = {
   chooseScene:"Ko‘rish uchun sahnani tanlang", needTwo:"Nuqta qo‘shish uchun kamida 2 ta sahna kerak.",
   loadError:"Turni yoki media fayllarni yuklab bo‘lmadi.", saveError:"Turni saqlab bo‘lmadi.",
   markerHelp:"Nuqtani panoramada kerakli tomonga qarab turgan paytingizda qo‘shing. Burchaklarni gradusda kiriting.", quality:"Loyiha sifatini tekshirish",checking:"Tekshirilmoqda…",qualityReport:"Sifat hisoboti",
-  qualityNoMedia:"Hali panorama yuklanmagan.",qualityVideoPending:"{name}: video sifati hozircha tekshirilmaydi.",qualityMissingFile:"{name}: asl fayl topilmadi.",qualityInvalidImage:"{name}: rasmni ochib bo‘lmadi.",qualityAspectRatio:"{name}: {width}×{height}, nisbat {ratio}:1.",qualityResolutionGood:"{name}: tavsiya etilgan aniqlik yetarli.",qualityResolutionLow:"{name}: kenglik 4000 px dan kichik.",qualityFormat:"{name}: format {format}.",qualityTourJson:"Virtual tur sozlamalarini o‘qib bo‘lmadi.",qualityNoScenes:"Virtual turda hali sahnalar yo‘q.",qualitySceneCount:"Virtual turda {count} ta sahna bor.",qualitySceneMedia:"{scene}: sahnada yaroqsiz panorama bor.",qualityBrokenHotspot:"{scene}: nuqta noto‘g‘ri sahnaga ulangan.",
+  qualityNoMedia:"Hali panorama yuklanmagan.",qualityVideoPending:"{name}: video sifati hozircha tekshirilmaydi.",qualityMissingFile:"{name}: asl fayl topilmadi.",qualityInvalidImage:"{name}: rasmni ochib bo‘lmadi.",qualityAspectRatio:"{name}: {width}×{height}, nisbat {ratio}:1.",qualityResolutionGood:"{name}: tavsiya etilgan aniqlik yetarli.",qualityResolutionLow:"{name}: kenglik 4000 px dan kichik.",qualityFormat:"{name}: format {format}.",qualityTourJson:"Virtual tur sozlamalarini o‘qib bo‘lmadi.",qualityNoScenes:"Virtual turda hali sahnalar yo‘q.",qualitySceneCount:"Virtual turda {count} ta sahna bor.",qualitySceneMedia:"{scene}: sahnada yaroqsiz panorama bor.",qualityBrokenHotspot:"{scene}: nuqta noto‘g‘ri sahnaga ulangan.",enableShare:"Ommaviy havolani yoqish",disableShare:"Ommaviy havolani o‘chirish",shareActive:"Ommaviy tur havolasi faol",shareInactive:"Ommaviy havola o‘chirildi",shareHint:"Havolaga ega har kim virtual turni ko‘ra oladi. Istalgan payt o‘chirishingiz mumkin.",copyShare:"Nusxalash",copied:"Havola nusxalandi",
   emptyHotspots:"Bu sahnada interaktiv nuqtalar yo‘q."
  },
  ru: {
@@ -37,7 +37,7 @@ const copy = {
   chooseScene:"Выберите сцену для просмотра", needTwo:"Для добавления точки нужно минимум 2 сцены.",
   loadError:"Не удалось загрузить тур или медиафайлы.", saveError:"Не удалось сохранить тур.",
   markerHelp:"Добавляйте точку, когда панорама направлена в нужную сторону. Углы вводятся в градусах.", quality:"Проверить качество проекта",checking:"Проверка…",qualityReport:"Отчёт о качестве",
-  qualityNoMedia:"Панорамы ещё не загружены.",qualityVideoPending:"{name}: проверка качества видео пока недоступна.",qualityMissingFile:"{name}: оригинальный файл не найден.",qualityInvalidImage:"{name}: изображение не удалось открыть.",qualityAspectRatio:"{name}: {width}×{height}, соотношение {ratio}:1.",qualityResolutionGood:"{name}: рекомендуемое разрешение достигнуто.",qualityResolutionLow:"{name}: ширина меньше 4000 пикселей.",qualityFormat:"{name}: формат {format}.",qualityTourJson:"Не удалось прочитать настройки тура.",qualityNoScenes:"В туре пока нет сцен.",qualitySceneCount:"В туре {count} сцен(ы).",qualitySceneMedia:"{scene}: у сцены отсутствует корректная панорама.",qualityBrokenHotspot:"{scene}: точка ведёт к несуществующей сцене.",
+  qualityNoMedia:"Панорамы ещё не загружены.",qualityVideoPending:"{name}: проверка качества видео пока недоступна.",qualityMissingFile:"{name}: оригинальный файл не найден.",qualityInvalidImage:"{name}: изображение не удалось открыть.",qualityAspectRatio:"{name}: {width}×{height}, соотношение {ratio}:1.",qualityResolutionGood:"{name}: рекомендуемое разрешение достигнуто.",qualityResolutionLow:"{name}: ширина меньше 4000 пикселей.",qualityFormat:"{name}: формат {format}.",qualityTourJson:"Не удалось прочитать настройки тура.",qualityNoScenes:"В туре пока нет сцен.",qualitySceneCount:"В туре {count} сцен(ы).",qualitySceneMedia:"{scene}: у сцены отсутствует корректная панорама.",qualityBrokenHotspot:"{scene}: точка ведёт к несуществующей сцене.",enableShare:"Включить публичную ссылку",disableShare:"Отключить публичную ссылку",shareActive:"Публичная ссылка активна",shareInactive:"Публичная ссылка отключена",shareHint:"Любой, у кого есть ссылка, сможет просмотреть тур. Вы можете отключить её в любое время.",copyShare:"Копировать",copied:"Ссылка скопирована",
   emptyHotspots:"В этой сцене пока нет интерактивных точек."
  },
  en: {
@@ -50,7 +50,7 @@ const copy = {
   chooseScene:"Choose a scene to preview", needTwo:"At least 2 scenes are needed to add a hotspot.",
   loadError:"Could not load the tour or media files.", saveError:"Could not save the tour.",
   markerHelp:"Add a hotspot while the panorama is facing the desired direction. Enter angles in degrees.", quality:"Run project quality check",checking:"Checking…",qualityReport:"Quality report",
-  qualityNoMedia:"No panoramas have been uploaded yet.",qualityVideoPending:"{name}: video quality checks are not available yet.",qualityMissingFile:"{name}: original file is missing.",qualityInvalidImage:"{name}: the image could not be decoded.",qualityAspectRatio:"{name}: {width}×{height}, aspect ratio {ratio}:1.",qualityResolutionGood:"{name}: recommended resolution met.",qualityResolutionLow:"{name}: width is below 4000 pixels.",qualityFormat:"{name}: format {format}.",qualityTourJson:"The virtual tour settings could not be read.",qualityNoScenes:"The virtual tour has no scenes yet.",qualitySceneCount:"The virtual tour contains {count} scene(s).",qualitySceneMedia:"{scene}: this scene has missing or invalid panorama media.",qualityBrokenHotspot:"{scene}: this hotspot points to a missing scene.",
+  qualityNoMedia:"No panoramas have been uploaded yet.",qualityVideoPending:"{name}: video quality checks are not available yet.",qualityMissingFile:"{name}: original file is missing.",qualityInvalidImage:"{name}: the image could not be decoded.",qualityAspectRatio:"{name}: {width}×{height}, aspect ratio {ratio}:1.",qualityResolutionGood:"{name}: recommended resolution met.",qualityResolutionLow:"{name}: width is below 4000 pixels.",qualityFormat:"{name}: format {format}.",qualityTourJson:"The virtual tour settings could not be read.",qualityNoScenes:"The virtual tour has no scenes yet.",qualitySceneCount:"The virtual tour contains {count} scene(s).",qualitySceneMedia:"{scene}: this scene has missing or invalid panorama media.",qualityBrokenHotspot:"{scene}: this hotspot points to a missing scene.",enableShare:"Enable public link",disableShare:"Disable public link",shareActive:"Public tour link is active",shareInactive:"Public link disabled",shareHint:"Anyone with the link can view this tour. You can revoke access at any time.",copyShare:"Copy link",copied:"Link copied",
   emptyHotspots:"This scene has no interactive hotspots yet."
  }
 };
@@ -91,7 +91,7 @@ export default function TourStudio({ token, language, projectId, projectName, on
  const [saving,setSaving]=useState(false);
  const [exporting,setExporting]=useState(false);
  const [checking,setChecking]=useState(false);
- const [quality,setQuality]=useState<QualityReport|null>(null);
+ const [quality,setQuality]=useState<QualityReport|null>(null);\n const [shareEnabled,setShareEnabled]=useState(false);\n const [shareUrl,setShareUrl]=useState("");\n const [shareBusy,setShareBusy]=useState(false);
  const [error,setError]=useState("");
  const [message,setMessage]=useState("");
  const activeScene=useMemo(()=>tour.scenes.find(scene=>scene.id===activeSceneId)??tour.scenes[0]??null,[tour.scenes,activeSceneId]);
@@ -102,13 +102,15 @@ export default function TourStudio({ token, language, projectId, projectName, on
    setLoading(true);setError("");
    try{
     const headers={Authorization:`Bearer ${token}`};
-    const [mediaResponse,tourResponse]=await Promise.all([
+    const [mediaResponse,tourResponse,shareResponse]=await Promise.all([
      fetch(`/api/projects/${projectId}/media`,{headers}),
-     fetch(`/api/projects/${projectId}/tour`,{headers})
+     fetch(`/api/projects/${projectId}/tour`,{headers}),
+     fetch(`/api/projects/${projectId}/share`,{headers})
     ]);
-    if(!mediaResponse.ok||!tourResponse.ok)throw new Error();
+    if(!mediaResponse.ok||!tourResponse.ok||!shareResponse.ok)throw new Error();
     const media=await mediaResponse.json();
     const stored=await tourResponse.json();
+    const share=await shareResponse.json();
     if(cancelled)return;
     const imageAssets=(Array.isArray(media)?media:[]).filter((asset:Asset)=>asset.contentType.startsWith("image/"));
     setAssets(imageAssets);
@@ -116,6 +118,8 @@ export default function TourStudio({ token, language, projectId, projectName, on
     setTour({title:stored.title||projectName,description:stored.description||"",scenes});
     setActiveSceneId(scenes[0]?.id||"");
     setSelectedMediaId(imageAssets.find((asset:Asset)=>!scenes.some((scene:Scene)=>scene.media_id===asset.id))?.id||"");
+    setShareEnabled(!!share.enabled);
+    setShareUrl(share.share_url?window.location.origin+share.share_url:"");
    }catch{if(!cancelled)setError(t.loadError);}
    finally{if(!cancelled)setLoading(false);}
   }
@@ -194,6 +198,28 @@ export default function TourStudio({ token, language, projectId, projectName, on
   if(!activeScene)return;
   updateScene(activeScene.id,{hotspots:activeScene.hotspots.filter((_,i)=>i!==index)});
  }
+ async function toggleShare(){
+  if(shareBusy)return;
+  setShareBusy(true);setError("");setMessage("");
+  try{
+   const saved=await saveTour();if(!saved)return;
+   const response=await fetch(`/api/projects/${projectId}/share`,{
+    method:"PUT",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},
+    body:JSON.stringify({enabled:!shareEnabled})
+   });
+   const data=await response.json().catch(()=>({}));
+   if(!response.ok)throw new Error(data.detail||t.saveError);
+   setShareEnabled(!!data.enabled);
+   setShareUrl(data.share_url?window.location.origin+data.share_url:"");
+   setMessage(data.enabled?t.shareActive:t.shareInactive);
+  }catch(error){setError(error instanceof Error?error.message:t.saveError);}
+  finally{setShareBusy(false);}
+ }
+ async function copyShareLink(){
+  if(!shareUrl)return;
+  try{await navigator.clipboard.writeText(shareUrl);setMessage(t.copied);}
+  catch{setMessage(shareUrl);}
+ }
  async function runQualityCheck(){
   if(checking)return;
   setChecking(true);setError("");setQuality(null);
@@ -239,8 +265,9 @@ export default function TourStudio({ token, language, projectId, projectName, on
  }
 
  return <section className="tour-studio">
-  <div className="media-head"><div><div className="eyebrow muted">360° TOUR WORKSPACE · {projectName}</div><h2>{t.title}</h2></div><div className="editor-actions"><button className="secondary" disabled={checking} onClick={()=>void runQualityCheck()}>{checking?t.checking:t.quality}</button><button className="secondary" disabled={exporting||saving} onClick={()=>void exportProject()}>{exporting?t.exporting:t.export}</button><button className="secondary" onClick={onBack}>{t.back}</button></div></div>
+  <div className="media-head"><div><div className="eyebrow muted">360° TOUR WORKSPACE · {projectName}</div><h2>{t.title}</h2></div><div className="editor-actions"><button className="secondary" disabled={shareBusy||saving} onClick={()=>void toggleShare()}>{shareBusy?t.saving:shareEnabled?t.disableShare:t.enableShare}</button><button className="secondary" disabled={checking} onClick={()=>void runQualityCheck()}>{checking?t.checking:t.quality}</button><button className="secondary" disabled={exporting||saving} onClick={()=>void exportProject()}>{exporting?t.exporting:t.export}</button><button className="secondary" onClick={onBack}>{t.back}</button></div></div>
   {loading?<div className="media-empty">…</div>:<>
+   {shareEnabled&&<div className="tour-share-panel"><div><strong>{t.shareActive}</strong><p>{t.shareHint}</p></div><div className="tour-share-link"><input readOnly value={shareUrl}/><button className="secondary" onClick={()=>void copyShareLink()}>{t.copyShare}</button></div></div>}
    {quality&&<div className="quality-panel"><h3>{t.qualityReport}</h3><div className="quality-summary"><span className="quality-pass">✓ {quality.summary.pass}</span><span className="quality-warning">! {quality.summary.warning}</span><span className="quality-fail">× {quality.summary.fail}</span></div><div className="quality-check-list">{quality.checks.map(check=><div className="quality-check" key={check.id}><span className={`quality-status ${check.status}`}>{check.status==="pass"?"✓":check.status==="warning"?"!":"×"}</span><span>{qualityText(check,language)}</span></div>)}</div></div>}
    <div className="tour-meta">
     <label className="field-label">{t.tourTitle}<input value={tour.title} onChange={e=>setTour(current=>({...current,title:e.target.value}))}/></label>
