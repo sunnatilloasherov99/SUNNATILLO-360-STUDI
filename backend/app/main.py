@@ -98,6 +98,15 @@ class MediaAsset(Base):
 
 
 app = FastAPI(title=settings.app_name, version="0.2.0")
+
+
+@app.middleware("http")
+async def prevent_api_response_caching(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Pragma"] = "no-cache"
+    return response
 rate_limit_redis = (
     Redis.from_url(settings.rate_limit_storage_uri, decode_responses=True)
     if settings.rate_limit_storage_uri.startswith(("redis://", "rediss://"))
