@@ -105,6 +105,7 @@ rate_limit_redis = (
 )
 _rate_limit_events: dict[str, deque[float]] = {}
 _rate_limit_lock = asyncio.Lock()
+ai_semaphore = asyncio.Semaphore(2)
 origins = [item.strip() for item in settings.frontend_origin.split(",") if item.strip()]
 app.add_middleware(
     CORSMiddleware,
@@ -621,12 +622,13 @@ async def ai_assist(payload: AIRequest, user: User = Depends(current_user), db: 
                         f"Respond in {language_names[payload.language]}. "
                         "Be honest about uncertainty and never invent visual observations."
                     )
-                    response = await client.post(
-                        url,
-                        json={"model": settings.ollama_model, "stream": False, "messages": [
-                            {"role": "system", "content": system}, user_message
-                        ]},
-                    )
+                    async with ai_semaphore:
+                        response = await client.post(
+                            url,
+                            json={"model": settings.ollama_model, "stream": False, "messages": [
+                                {"role": "system", "content": system}, user_message
+                            ]},
+                        )
                     response.raise_for_status()
                     content = response.json().get("message", {}).get("content", "").strip()
                     if not content:
@@ -645,12 +647,13 @@ async def ai_assist(payload: AIRequest, user: User = Depends(current_user), db: 
                     f"Respond in {language_names[payload.language]}. "
                     "Be honest about uncertainty. Do not fabricate visual observations or platform publishing permissions."
                 )
-                response = await client.post(
-                    url,
-                    json={"model": settings.ollama_model, "stream": False, "messages": [
-                        {"role": "system", "content": system_prompt}, user_message
-                    ]},
-                )
+                async with ai_semaphore:
+                    response = await client.post(
+                        url,
+                        json={"model": settings.ollama_model, "stream": False, "messages": [
+                            {"role": "system", "content": system_prompt}, user_message
+                        ]},
+                    )
                 response.raise_for_status()
                 output = response.json().get("message", {}).get("content", "").strip()
     except httpx.TimeoutException:
