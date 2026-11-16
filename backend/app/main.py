@@ -460,9 +460,9 @@ async def ai_assist(payload: AIRequest, user: User = Depends(current_user), db: 
         image_path = storage_dir / asset.stored_name
         if not image_path.is_file():
             raise HTTPException(status_code=404, detail="Selected image file is missing.")
-        image_bytes = image_path.read_bytes()
-        if len(image_bytes) > 12 * 1024 * 1024:
+        if image_path.stat().st_size > 12 * 1024 * 1024:
             raise HTTPException(status_code=413, detail="Choose an image smaller than 12 MB for local AI analysis.")
+        image_bytes = image_path.read_bytes()
         try:
             with Image.open(image_path) as image:
                 image.verify()
