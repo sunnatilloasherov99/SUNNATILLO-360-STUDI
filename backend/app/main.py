@@ -224,15 +224,15 @@ async def upload_project_media(
         raise HTTPException(status_code=400, detail="The uploaded file is empty.")
 
     signatures = {
-        "image/jpeg": lambda data: data.startswith(b"\\xff\\xd8\\xff"),
-        "image/png": lambda data: data.startswith(b"\\x89PNG\\r\\n\\x1a\\n"),
+        "image/jpeg": lambda data: data.startswith(bytes([255, 216, 255])),
+        "image/png": lambda data: data.startswith(bytes([137, 80, 78, 71, 13, 10, 26, 10])),
         "image/webp": lambda data: len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP",
     }
     if not signatures[file.content_type or ""](bytes(header)):
         destination.unlink(missing_ok=True)
         raise HTTPException(status_code=415, detail="The file content does not match its declared image type.")
 
-    safe_original_name = (file.filename or f"panorama{extension}").replace("\\\\", "/").split("/")[-1][:255]
+    safe_original_name = (file.filename or f"panorama{extension}").replace(chr(92), "/").split("/")[-1][:255]
     asset = MediaAsset(
         id=asset_id,
         project_id=project_id,
