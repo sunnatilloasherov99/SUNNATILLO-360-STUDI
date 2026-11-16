@@ -3,6 +3,7 @@ import { Aperture, Bot, CheckCircle2, ChevronRight, CircleHelp, CloudUpload, Fol
 import { getMissingTranslations, translate } from "./i18n";
 import type { Language } from "./i18n";
 import MediaStudio from "./MediaStudio";
+import TourStudio from "./TourStudio";
 
 type Mode = "ai" | "manual" | "collab";
 type Project = { id: string; name: string; mode: Mode; updatedAt: string };
@@ -29,6 +30,7 @@ export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [showMedia, setShowMedia] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [apiError, setApiError] = useState("");
   const [savingProject, setSavingProject] = useState(false);
@@ -61,7 +63,12 @@ export default function App() {
     } catch (error) { setAuthError(error instanceof Error ? error.message : "Kirish amalga oshmadi."); }
     finally { setAuthLoading(false); }
   }
-  function logout() { localStorage.removeItem("s360-token"); setToken(""); setProjects([]); setActiveProject(null); setShowMedia(false); }
+  function logout() { localStorage.removeItem("s360-token"); setToken(""); setProjects([]); setActiveProject(null); setShowMedia(false); setShowTour(false); }
+  function openTourStudio() {
+    const project = activeProject || projects[0];
+    if (!project) { setApiError(language === "ru" ? "Сначала создайте проект." : language === "en" ? "Create a project first." : "Avval loyiha yarating."); return; }
+    setActiveProject(project); setShowMedia(false); setShowTour(true); setApiError("");
+  }
   async function createProject() {
     if (!projectName.trim() || savingProject) return;
     setSavingProject(true);
@@ -89,7 +96,7 @@ export default function App() {
       <button className="nav-item active"><Layers3 size={17}/>{t("workspace")}</button>
       <button className="nav-item" onClick={() => setShowCreate(true)}><FolderOpen size={17}/>{t("projects")}</button>
       <div className="side-label tools-label">{t("studio")}</div>
-      <button className="nav-item" onClick={() => setActiveProject(null)}><Globe2 size={17}/>{t("publisher")} <span className="soon">{t("comingSoon")}</span></button>
+      <button className={`nav-item ${showTour ? "active" : ""}`} onClick={openTourStudio}><Globe2 size={17}/>{t("publisher")}</button>
       <button className="nav-item"><ShieldCheck size={17}/>{t("quality")} <span className="soon">{t("comingSoon")}</span></button>
       <button className="nav-item" onClick={() => setShowMedia(true)}><CloudUpload size={17}/>{t("media")}</button>
       <div className="sidebar-bottom"><div className="privacy"><ShieldCheck size={16}/><span>{t("privacyNote")}</span></div><div className="version">{t("webEdition")} · 0.2.0</div></div>
@@ -101,8 +108,9 @@ export default function App() {
       <section className="projects-section" id="projects"><div className="section-heading"><div><div className="eyebrow muted">{t("yourWork")}</div><h2>{t("projects")}</h2></div><button className="text-button" onClick={() => setShowCreate(true)}><Plus size={16}/>{t("newProject")}</button></div>
       {apiError && <div className="media-alert">{apiError}</div>}
       {loadingProjects ? <div className="empty"><strong>{language === "ru" ? "Загрузка проектов…" : language === "en" ? "Loading projects…" : "Loyihalar yuklanmoqda…"}</strong></div> : projects.length === 0 ? <div className="empty"><div className="empty-icon"><FolderOpen size={24}/></div><strong>{t("noProjects")}</strong><span>{language === "ru" ? "Проекты будут храниться на сервере" : language === "en" ? "Projects will be stored on the server" : "Loyihalar serverda saqlanadi"}</span></div> : <div className="project-list">{projects.map(project => <button className="project-row" key={project.id} onClick={() => { setActiveProject(project); setMode(project.mode); }}><div className="project-symbol"><Aperture size={20}/></div><div className="project-info"><strong>{project.name}</strong><span>{t(project.mode === "ai" ? "aiMode" : project.mode === "manual" ? "manualMode" : "collabMode")} · {new Date(project.updatedAt).toLocaleDateString()}</span></div><ChevronRight size={18}/></button>)}</div>}</section>
-      {showMedia && <MediaStudio token={token} language={language} projectId={activeProject?.id || ""} projectName={activeProject?.name || ""} projects={projects} onBack={() => setShowMedia(false)} onSelectProject={setActiveProject}/>}
-      {activeProject && !showMedia && <section className="active-project"><div><div className="eyebrow muted">{t("activeProject")}</div><h2>{activeProject.name}</h2><p>{t("comingSoon")}: editor modules are being implemented in stages.</p></div><button className="secondary" onClick={() => setShowMedia(true)}>{t("media")}</button></section>}
+      {showTour && activeProject && <TourStudio token={token} language={language} projectId={activeProject.id} projectName={activeProject.name} onBack={() => setShowTour(false)}/>}
+      {showMedia && !showTour && <MediaStudio token={token} language={language} projectId={activeProject?.id || ""} projectName={activeProject?.name || ""} projects={projects} onBack={() => setShowMedia(false)} onSelectProject={setActiveProject}/>}
+      {activeProject && !showMedia && !showTour && <section className="active-project"><div><div className="eyebrow muted">{t("activeProject")}</div><h2>{activeProject.name}</h2><p>{t("comingSoon")}: editor modules are being implemented in stages.</p></div><button className="secondary" onClick={() => setShowMedia(true)}>{t("media")}</button></section>}
       <footer><span>© 2026 SUNNATILLO 360° STUDIO</span><span>{t("portableTag")}</span></footer>
     </main>
     {showCreate && <div className="modal-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) setShowCreate(false); }}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button className="modal-close" onClick={() => setShowCreate(false)}>×</button><div className="eyebrow muted">{t("newWorkspace")}</div><h2 id="modal-title">{t("newProject")}</h2><label className="field-label">{t("projectName")}<input autoFocus value={projectName} onChange={e => setProjectName(e.target.value)} placeholder={t("projectNamePlaceholder")} onKeyDown={e => e.key === "Enter" && void createProject()}/></label><div className="modal-mode">{t(mode === "ai" ? "aiMode" : mode === "manual" ? "manualMode" : "collabMode")}</div><div className="modal-actions"><button className="secondary" onClick={() => setShowCreate(false)}>{t("cancel")}</button><button className="primary" disabled={!projectName.trim() || savingProject} onClick={() => void createProject()}>{savingProject ? "…" : t("create")}<ChevronRight size={16}/></button></div></div></div>}
