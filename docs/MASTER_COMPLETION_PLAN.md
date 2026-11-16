@@ -39,16 +39,20 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 ### 5.2 Qo'lda tuzatish
 - [x] Brauzerda nuqson maydonini belgilash va yumshoq chetli clone brush qo‘shildi.
 - [x] Clone/patch vositasi va manba maydonini tanlash, cho‘tka o‘lchami hamda stroke bo‘ylab manba siljishi qo‘shildi.
-- [x] Clone cho‘tkasining nishon nuqtasi uchun chap-o‘ng 360° o‘rash qo‘shildi; manba namunasining chetni kesib o‘tishi hali qo‘llanmaydi.
+- [x] Clone cho‘tkasining nishon nuqtasi va manba namunasiga chap-o‘ng 360° o‘rash qo‘shildi (commit `7fd5adf`).
 - [x] Editor preview, undo/redo va tuzatish qatlamini tozalash qo‘shildi.
 - [x] Tuzatish qatlamini asl faylga tegmasdan yangi hosila media eksportiga qo‘shildi.
 - [x] CI run 43918087957: frontend build, backend testlari va Docker/infratuzilma tekshiruvlari muvaffaqiyatli.
 
 ### 5.3 Ixtiyoriy lokal AI inpainting
-- [ ] Provider-neutral adapter.
-- [ ] Foydalanuvchi o'zi sozlagan lokal ComfyUI/inpainting endpoint.
-- [ ] Rozilik, maskani tasdiqlash, timeout va hajm cheklovlari.
-- [ ] Model mavjud bo'lmasa, AI tugmasini aniq o'chirib, manual vositalarni ishlatish.
+- [x] Server-side provider adapterining dastlabki HTTP multipart shartnomasi qo‘shildi (`image`, `mask`, `prompt`; natija bir xil o‘lchamdagi JPEG/PNG/WebP).
+- [x] Provider URL faqat server konfiguratsiyasidan olinadi; foydalanuvchi so‘rovi orqali ixtiyoriy URL chaqirishga yo‘l qo‘yilmaydi.
+- [x] Login talabi, 20 MB fayl cheklovi, 40 MP rasm cheklovi, maska o‘lchami tekshiruvi, timeout, provider xatolari va natija formati tekshiruvi qo‘shildi.
+- [x] AI capabilities javobida provider mavjudligi va foydalanuvchi tasdig‘i talab qilinishi ko‘rsatiladi.
+- [x] `.env.example` da ixtiyoriy `INPAINTING_ENDPOINT_URL`, `INPAINTING_API_KEY`, `INPAINTING_TIMEOUT_SECONDS` sozlamalari hujjatlashtirildi.
+- [ ] Foydalanuvchi o‘zi sozlagan ComfyUI workflow uchun mos HTTP bridge va real model sinovi. To‘g‘ridan-to‘g‘ri ComfyUI workflow API hali ulanmagan.
+- [ ] Frontend’da maska chizish, natijani oldin/keyin ko‘rish va faqat foydalanuvchi tasdiqlagandan keyin qabul qilish.
+- [ ] Model mavjud bo‘lmasa, AI boshqaruvini aniq o‘chirish; manual vositalar ishlashda davom etishi.
 
 ### 5.4 Eksport va qabul sinovlari
 - [ ] Tahrir tarixi va source asset bog'lanishi.
@@ -105,7 +109,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 ## Hozirgi navbatdagi ishlar
 
 1. 5.2 clone brush uchun frontend build va vizual sinovni yakunlash.
-2. 360° chetlarida clone source sampling va maska xatti-harakatini mustahkamlash.
+2. 5.3 frontend mask editor, explicit confirmation va before/after preview.
 3. Tahrir qatlamini saqlash va haqiqiy panorama bilan qabul sinovlarini qo‘shish.
 4. Har bir commitdan so‘ng CI natijasini qayta tekshirish.
 
