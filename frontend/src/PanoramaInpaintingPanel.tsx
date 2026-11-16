@@ -119,7 +119,8 @@ export default function PanoramaInpaintingPanel({ imageUrl, token, language, onA
     const context = canvas.getContext("2d");
     if (!context) return;
     const p = point(event);
-    setHasMask(true);\n    context.fillStyle = "#ffffff";
+    setHasMask(true);
+    context.fillStyle = "#ffffff";
     context.beginPath();
     context.arc(p.x, p.y, brush * Math.max(1, canvas.width / 1600), 0, Math.PI * 2);
     context.fill();
