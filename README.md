@@ -31,7 +31,7 @@ An independent, portable web platform for professional 360° media workflows and
 - Manual PostgreSQL and media-volume backup/restore scripts with SHA-256 checksums.
 - Redis-backed request rate limits for registration, login and AI requests.
 - Installable Progressive Web App (PWA) shell for desktop/mobile browsers; private API data is never cached by the service worker.
-- Optional local Ollama AI specialists for panorama advice, tour planning, scene descriptions and stitching guidance, plus a three-role parallel collaboration review; explicitly selected project images can be sent to a vision-capable local model. No paid AI key is required.
+- Optional local Ollama AI specialists for panorama advice, tour planning, scene descriptions and stitching guidance, plus a three-role parallel collaboration review; explicitly selected project images and three extracted video keyframes can be sent to a vision-capable local model. No paid AI key is required.
 - FastAPI health and capability endpoints.
 - Server-side project create/list/delete API backed by SQLAlchemy and PostgreSQL (SQLite is available for local development).
 - Persistent JPEG/PNG/WebP and MP4/WebM media upload, listing and file delivery endpoints with a configurable upload limit.
@@ -42,7 +42,7 @@ An independent, portable web platform for professional 360° media workflows and
 ### Not implemented yet
 - Production hardening still required before public launch: email verification/password reset, HTTPS, production secrets and additional abuse monitoring.
 - Full multi-track timeline editor, advanced color grading, audio editing and keyframes; current MP4 export is a basic trim-and-re-encode workflow.
-- Cloud AI provider adapters, multimodal image/video analysis and consent-based project-file context.
+- Cloud AI provider adapters and consent-based project-file context; local Ollama image analysis and three-keyframe video analysis are implemented.
 - Advanced seam/stitching defect detection and automatic stitching repair.
 - Standalone offline tour package export and official Google/Yandex/2GIS publishing integrations.
 - Google Street View publishing OAuth/upload workflow.
