@@ -306,3 +306,10 @@ def test_first_registered_user_adopts_legacy_projects(client: TestClient) -> Non
     projects = client.get("/api/projects", headers=bearer(token))
     assert projects.status_code == 200
     assert [project["name"] for project in projects.json()] == ["Old project"]
+
+
+def test_health_checks_database_and_media_storage(client: TestClient) -> None:
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    assert response.json()["dependencies"]["database"] == "ok"
+    assert response.json()["dependencies"]["media_storage"] == "ok"
