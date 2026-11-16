@@ -2,6 +2,7 @@ from collections.abc import Generator
 from pathlib import Path
 from io import BytesIO
 from zipfile import ZipFile
+from datetime import datetime, timezone
 from PIL import Image
 import sys
 
@@ -12,7 +13,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.main import Base, app, get_db
+from app.main import Base, Project, app, get_db
 
 
 @pytest.fixture
@@ -33,11 +34,13 @@ def client(tmp_path) -> Generator[TestClient, None, None]:
             db.close()
 
     app.dependency_overrides[get_db] = override_get_db
+    app.state.test_session_factory = test_session
     try:
         with TestClient(app) as test_client:
             yield test_client
     finally:
         app.dependency_overrides.clear()
+        del app.state.test_session_factory
         engine.dispose()
 
 
@@ -236,3 +239,25 @@ def test_login_rate_limit_returns_429(client: TestClient) -> None:
     limited = client.post("/api/auth/login", headers=headers, json=payload)
     assert limited.status_code == 429
     assert limited.headers["retry-after"] == "60"
+
+
+def test_first_registered_user_adopts_legacy_projects(client: TestClient) -> None:
+    session = app.state.test_session_factory()
+    now = datetime.now(timezone.utc)
+    session.add(
+        Project(
+            id="legacy-project-0001",
+            owner_id=None,
+            name="Old project",
+            mode="manual",
+            created_at=now,
+            updated_at=now,
+        )
+    )
+    session.commit()
+    session.close()
+
+    token = register(client, "first-user@example.com")
+    projects = client.get("/api/projects", headers=bearer(token))
+    assert projects.status_code == 200
+    assert [project["name"] for project in projects.json()] == ["Old project"]
