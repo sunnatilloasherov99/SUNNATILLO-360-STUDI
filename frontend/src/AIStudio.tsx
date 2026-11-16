@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Language } from "./i18n";
 
-type Role = "panorama_quality" | "tour_planner" | "tour_description" | "stitching_advisor";
+type Role = "panorama_quality" | "tour_planner" | "tour_description" | "stitching_advisor" | "collaboration";
 type Asset={id:string;name:string;contentType:string};
 type Props = { token: string; language: Language; projectId?: string; onBack: () => void };
 
@@ -16,7 +16,8 @@ const labels = {
   panorama_quality:["360° sifat tahlilchisi","Panorama sifati, o‘lcham va tikuv muammolari bo‘yicha maslahat."],
   tour_planner:["Virtual tur rejissyori","Sahnalar ketma-ketligi va qulay navigatsiya rejasini tuzish."],
   tour_description:["Tavsif yozuvchi","Virtual tur sahnalari uchun professional tavsif tayyorlash."],
-  stitching_advisor:["Stitching mutaxassisi","Choklar, parallaks va yorug‘lik farqlarini tuzatish bo‘yicha maslahat."]
+  stitching_advisor:["Stitching mutaxassisi","Choklar, parallaks va yorug‘lik farqlarini tuzatish bo‘yicha maslahat."],
+  collaboration:["AI mutaxassislar jamoasi","Sifat, stitching va virtual tur mutaxassislari birgalikda tahlil qiladi."]
  },
  ru: {
   title:"Команда AI-специалистов",subtitle:"Локальные AI-помощники — по желанию и конфиденциально",
@@ -28,7 +29,8 @@ const labels = {
   panorama_quality:["Аналитик качества 360°","Советы по качеству панорамы, разрешению и дефектам."],
   tour_planner:["Режиссёр виртуального тура","Порядок сцен и удобная навигация для посетителей."],
   tour_description:["Автор описаний","Профессиональные описания для сцен виртуального тура."],
-  stitching_advisor:["Специалист по склейке","Советы по швам, параллаксу и разнице экспозиции."]
+  stitching_advisor:["Специалист по склейке","Советы по швам, параллаксу и разнице экспозиции."],
+  collaboration:["Командный AI-анализ","Аналитик качества, специалист по склейке и режиссёр тура работают вместе."]
  },
  en: {
   title:"AI specialist team",subtitle:"Optional, private local AI assistants",
@@ -40,10 +42,11 @@ const labels = {
   panorama_quality:["360° quality analyst","Advice on panorama quality, resolution and defects."],
   tour_planner:["Virtual tour planner","Plan scene order and visitor navigation."],
   tour_description:["Scene description writer","Create professional descriptions for tour scenes."],
-  stitching_advisor:["Stitching specialist","Advice on seams, parallax and exposure mismatch."]
+  stitching_advisor:["Stitching specialist","Advice on seams, parallax and exposure mismatch."],
+  collaboration:["AI team review","Quality, stitching and virtual-tour specialists review the task together."]
  }
 };
-const roleIds:Role[]=["panorama_quality","tour_planner","tour_description","stitching_advisor"];
+const roleIds:Role[]=["panorama_quality","tour_planner","tour_description","stitching_advisor","collaboration"];
 
 export default function AIStudio({token,language,projectId,onBack}:Props){
  const t=labels[language];
