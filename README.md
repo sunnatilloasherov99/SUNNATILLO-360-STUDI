@@ -16,7 +16,7 @@ An independent, portable web platform for professional 360° media workflows and
 - React + TypeScript web interface.
 - Uzbek, Russian and English language selector with persistent preference.
 - Three project startup modes: AI Professional, Manual Professional and AI Collaboration.
-- Browser-local project list.
+- Server-backed project creation and listing through the FastAPI API.
 - First 360° media workspace: import a JPG/PNG/WebP panorama, inspect dimensions and aspect ratio, and interactively look around a 2:1 equirectangular panorama.
 - Original imported panorama is not modified.
 - FastAPI health and capability endpoints.
@@ -27,7 +27,7 @@ An independent, portable web platform for professional 360° media workflows and
 - GitHub Actions frontend build and backend syntax checks.
 
 ### Not implemented yet
-- Persistent server-side project/media storage and user accounts.
+- User accounts, project ownership and access control (not yet implemented).
 - Full timeline editor, video processing, color grading, audio and keyframes.
 - AI provider adapters and consent-based shared project context.
 - Stitching repair and automated quality analysis.
