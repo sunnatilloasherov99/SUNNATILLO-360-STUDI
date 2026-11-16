@@ -1,12 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Aperture, Bot, CheckCircle2, ChevronRight, CircleHelp, CloudUpload, FolderOpen, Globe2, Languages, Layers3, Plus, ShieldCheck, Film, SlidersHorizontal, Sparkles, WandSparkles } from "lucide-react";
 import { getMissingTranslations, translate } from "./i18n";
 import type { Language } from "./i18n";
-import MediaStudio from "./MediaStudio";
-import TourStudio from "./TourStudio";
-import AIStudio from "./AIStudio";
-import VideoStudio from "./VideoStudio";
-import PublicTour from "./PublicTour";
+
+
+
+
+
+
+const MediaStudio = lazy(() => import("./MediaStudio"));
+const TourStudio = lazy(() => import("./TourStudio"));
+const AIStudio = lazy(() => import("./AIStudio"));
+const VideoStudio = lazy(() => import("./VideoStudio"));
+const PublicTour = lazy(() => import("./PublicTour"));
 
 type Mode = "ai" | "manual" | "collab";
 type Project = { id: string; name: string; mode: Mode; updatedAt: string };
@@ -95,7 +101,7 @@ export default function App() {
       setApiError(error instanceof Error && error.message !== "API" ? error.message : (language === "ru" ? "Не удалось сохранить проект на сервере." : language === "en" ? "Could not save the project to the server." : "Loyihani serverga saqlab bo‘lmadi."));
     } finally { setSavingProject(false); }
   }
-  if (publicToken) return <PublicTour token={publicToken} language={language}/>;
+  if (publicToken) return <Suspense fallback={<div className="workspace-loading">360°…</div>}><PublicTour token={publicToken} language={language}/></Suspense>;
   if (!token) return <div className="app-shell"><main className="main"><header className="topbar"><div className="breadcrumb">SUNNATILLO 360° STUDIO <span>/</span> {language === "ru" ? "Аккаунт" : language === "en" ? "Account" : "Hisob"}</div><label className="language"><Languages size={16}/><select value={language} onChange={e => changeLanguage(e.target.value as Language)}><option value="uz">O‘zbekcha</option><option value="ru">Русский</option><option value="en">English</option></select></label></header><section className="hero"><div className="hero-copy"><div className="eyebrow"><span/> SUNNATILLO 360° STUDIO</div><h1>{language === "ru" ? "Ваше пространство 360°" : language === "en" ? "Your 360° workspace" : "360° ish muhitingiz"}</h1><p>{language === "ru" ? "Войдите или создайте аккаунт, чтобы ваши проекты и медиафайлы были доступны только вам." : language === "en" ? "Sign in or create an account so your projects and media remain private to you." : "Loyiha va media fayllaringiz faqat sizga tegishli bo‘lishi uchun hisobingizga kiring yoki yangi hisob yarating."}</p><div className="auth-panel"><div className="modal-actions"><button className={authMode === "register" ? "primary" : "secondary"} onClick={() => {setAuthMode("register");setAuthError("");}}>{language === "ru" ? "Регистрация" : language === "en" ? "Create account" : "Ro‘yxatdan o‘tish"}</button><button className={authMode === "login" ? "primary" : "secondary"} onClick={() => {setAuthMode("login");setAuthError("");}}>{language === "ru" ? "Войти" : language === "en" ? "Sign in" : "Kirish"}</button></div><label className="field-label">Email<input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@example.com"/></label><label className="field-label">{language === "ru" ? "Пароль" : language === "en" ? "Password" : "Parol"}<input type="password" autoComplete={authMode === "register" ? "new-password" : "current-password"} value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&void authenticate()} placeholder={language === "uz" ? "Kamida 8 ta belgi" : language === "ru" ? "Не менее 8 символов" : "At least 8 characters"}/></label>{authError && <div className="media-alert">{authError}</div>}<button className="primary" disabled={!email.trim() || !password || authLoading} onClick={()=>void authenticate()}>{authLoading ? "…" : authMode === "register" ? (language === "ru" ? "Создать аккаунт" : language === "en" ? "Create account" : "Hisob yaratish") : (language === "ru" ? "Войти" : language === "en" ? "Sign in" : "Kirish")}<ChevronRight size={17}/></button><p className="privacy-inline"><ShieldCheck size={16}/>{language === "ru" ? "Пароль хранится в виде защищённого хеша." : language === "en" ? "Your password is stored as a secure hash." : "Parolingiz serverda himoyalangan xesh ko‘rinishida saqlanadi."}</p></div></div><div className="hero-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="planet"><Aperture size={76} strokeWidth={1.1}/></div></div></section><footer><span>© 2026 SUNNATILLO 360° STUDIO</span><span>PRIVATE WORKSPACE</span></footer></main></div>;
   return <div className="app-shell">
     <aside className="sidebar">
@@ -118,10 +124,10 @@ export default function App() {
       <section className="projects-section" id="projects"><div className="section-heading"><div><div className="eyebrow muted">{t("yourWork")}</div><h2>{t("projects")}</h2></div><button className="text-button" onClick={() => setShowCreate(true)}><Plus size={16}/>{t("newProject")}</button></div>
       {apiError && <div className="media-alert">{apiError}</div>}
       {loadingProjects ? <div className="empty"><strong>{language === "ru" ? "Загрузка проектов…" : language === "en" ? "Loading projects…" : "Loyihalar yuklanmoqda…"}</strong></div> : projects.length === 0 ? <div className="empty"><div className="empty-icon"><FolderOpen size={24}/></div><strong>{t("noProjects")}</strong><span>{language === "ru" ? "Проекты будут храниться на сервере" : language === "en" ? "Projects will be stored on the server" : "Loyihalar serverda saqlanadi"}</span></div> : <div className="project-list">{projects.map(project => <button className="project-row" key={project.id} onClick={() => { setActiveProject(project); setMode(project.mode); setShowTour(false); setShowAI(false); setShowVideo(false); setShowMedia(false); }}><div className="project-symbol"><Aperture size={20}/></div><div className="project-info"><strong>{project.name}</strong><span>{t(project.mode === "ai" ? "aiMode" : project.mode === "manual" ? "manualMode" : "collabMode")} · {new Date(project.updatedAt).toLocaleDateString()}</span></div><ChevronRight size={18}/></button>)}</div>}</section>
-      {showAI && <AIStudio token={token} language={language} projectId={activeProject?.id || ""} onBack={() => setShowAI(false)}/>}
-      {showVideo && <VideoStudio token={token} language={language} projectId={activeProject?.id || ""} projectName={activeProject?.name || ""} projects={projects} onBack={() => setShowVideo(false)} onSelectProject={setActiveProject}/>}
-      {showTour && activeProject && <TourStudio token={token} language={language} projectId={activeProject.id} projectName={activeProject.name} onBack={() => setShowTour(false)}/>}
-      {showMedia && !showTour && <MediaStudio token={token} language={language} projectId={activeProject?.id || ""} projectName={activeProject?.name || ""} projects={projects} onBack={() => setShowMedia(false)} onSelectProject={setActiveProject}/>}
+      {showAI && <Suspense fallback={<div className="workspace-loading">AI…</div>}><AIStudio token={token} language={language} projectId={activeProject?.id || ""} onBack={() => setShowAI(false)}/></Suspense>}
+      {showVideo && <Suspense fallback={<div className="workspace-loading">360° video…</div>}><VideoStudio token={token} language={language} projectId={activeProject?.id || ""} projectName={activeProject?.name || ""} projects={projects} onBack={() => setShowVideo(false)} onSelectProject={setActiveProject}/></Suspense>}
+      {showTour && activeProject && <Suspense fallback={<div className="workspace-loading">Tour…</div>}><TourStudio token={token} language={language} projectId={activeProject.id} projectName={activeProject.name} onBack={() => setShowTour(false)}/></Suspense>}
+      {showMedia && !showTour && <MediaStudio token={token} language={language} projectId={activeProject?.id || ""} projectName={activeProject?.name || ""} projects={projects} onBack={() => setShowMedia(false)} onSelectProject={setActiveProject}/></Suspense>}
       {activeProject && !showMedia && !showTour && !showAI && !showVideo && <section className="active-project"><div><div className="eyebrow muted">{t("activeProject")}</div><h2>{activeProject.name}</h2><p>{t("comingSoon")}: editor modules are being implemented in stages.</p></div><button className="secondary" onClick={() => setShowMedia(true)}>{t("media")}</button></section>}
       <footer><span>© 2026 SUNNATILLO 360° STUDIO</span><span>{t("portableTag")}</span></footer>
     </main>
