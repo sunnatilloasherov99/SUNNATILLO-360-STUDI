@@ -253,6 +253,7 @@ class EditorSettings(BaseModel):
     contrast: float = Field(default=1.0, ge=0.5, le=1.5)
     saturation: float = Field(default=1.0, ge=0.0, le=2.0)
     seam_offset: int = Field(default=0, ge=0, le=359)
+    seam_blend_percent: float = Field(default=0.0, ge=0.0, le=5.0)
 
 
 class VideoTrimSettings(BaseModel):
