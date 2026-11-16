@@ -7,7 +7,7 @@ import "@photo-sphere-viewer/core/index.css";
 type Language = "uz" | "ru" | "en";
 type Project = { id: string; name: string; mode: "ai" | "manual" | "collab"; updatedAt: string };
 type EditSettings = { brightness: number; contrast: number; saturation: number; seamOffset: number; seamBlend: number };
-type Asset = { id: string; projectId: string; name: string; contentType: string; sizeBytes: number; createdAt: string; url: string };
+type Asset = { id: string; projectId: string; name: string; contentType: string; sizeBytes: number; createdAt: string; sourceAssetId?: string | null; url: string };
 type SeamReport = { score: number; level: "low" | "medium" | "high" };
 type Props = { token: string; language: Language; projectId: string; projectName: string; projects: Project[]; onBack: () => void; onSelectProject: (project: Project) => void };
 const copy = {
@@ -99,7 +99,7 @@ export default function MediaStudio({ token, language, projectId, projectName, p
   return output;
  }
  async function exportEditedImage(){if(!url||!meta||exporting)return;setExporting(true);setExportMessage("");try{const output=await renderEditedBlob();const outputUrl=URL.createObjectURL(output);const link=document.createElement("a");link.href=outputUrl;link.download=meta.name.replace(/\.[^.]+$/,"") + "-edited.jpg";document.body.appendChild(link);link.click();link.remove();window.setTimeout(()=>URL.revokeObjectURL(outputUrl),1000);setExportMessage(t.exported);}catch{setError(t.exportFailed);}finally{setExporting(false);}}
- async function saveEditedCopy(){if(!url||!meta||!projectId||savingCopy)return;setSavingCopy(true);setExportMessage("");try{const output=await renderEditedBlob();const fileName=meta.name.replace(/\.[^.]+$/,"") + "-edited.jpg";const body=new FormData();body.append("file",output,fileName);const response=await fetch("/api/projects/"+projectId+"/media",{method:"POST",headers:{Authorization:"Bearer "+token},body});if(!response.ok)throw new Error();const asset:Asset=await response.json();setAssets(current=>[asset,...current.filter(item=>item.id!==asset.id)]);setExportMessage(t.savedCopy);}catch{setError(t.saveCopyFailed);}finally{setSavingCopy(false);}}
+ async function saveEditedCopy(){if(!url||!meta||!projectId||savingCopy)return;setSavingCopy(true);setExportMessage("");try{const output=await renderEditedBlob();const fileName=meta.name.replace(/\.[^.]+$/,"") + "-edited.jpg";const body=new FormData();body.append("file",output,fileName);if(selectedMediaId)body.append("source_asset_id",selectedMediaId);const response=await fetch("/api/projects/"+projectId+"/media",{method:"POST",headers:{Authorization:"Bearer "+token},body});if(!response.ok)throw new Error();const asset:Asset=await response.json();setAssets(current=>[asset,...current.filter(item=>item.id!==asset.id)]);setExportMessage(t.savedCopy);}catch{setError(t.saveCopyFailed);}finally{setSavingCopy(false);}}
  useEffect(()=>{setUrl(null);setMeta(null);setAssets([]);setSeamReport(null);setSelectedMediaId(null);setAiAnalysis("");setAcceptedAIUrl(null);setSettingsMessage("");if(projectId){void loadAssets(projectId);void loadEditorSettings(projectId);}},[projectId]);
  useEffect(()=>()=>{if(url?.startsWith("blob:"))URL.revokeObjectURL(url);},[url]);
  useEffect(()=>()=>{if(acceptedAIUrl?.startsWith("blob:"))URL.revokeObjectURL(acceptedAIUrl);},[acceptedAIUrl]);
