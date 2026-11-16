@@ -65,6 +65,7 @@ class Project(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     edit_settings_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    tour_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
     media: Mapped[list["MediaAsset"]] = relationship(back_populates="project", cascade="all, delete-orphan")
 
 
@@ -89,6 +90,8 @@ with engine.begin() as connection:
         connection.execute(text("ALTER TABLE projects ADD COLUMN owner_id VARCHAR(36)"))
     if "edit_settings_json" not in columns:
         connection.execute(text("ALTER TABLE projects ADD COLUMN edit_settings_json TEXT NOT NULL DEFAULT '{}'"))
+    if "tour_json" not in columns:
+        connection.execute(text("ALTER TABLE projects ADD COLUMN tour_json TEXT NOT NULL DEFAULT '{}'"))
     connection.execute(text("CREATE INDEX IF NOT EXISTS ix_projects_owner_id ON projects (owner_id)"))
 
 app = FastAPI(title=settings.app_name, version="0.2.0")
@@ -165,6 +168,27 @@ class EditorSettings(BaseModel):
     brightness: float = Field(default=1.0, ge=0.5, le=1.5)
     contrast: float = Field(default=1.0, ge=0.5, le=1.5)
     saturation: float = Field(default=1.0, ge=0.0, le=2.0)
+
+
+class TourHotspotInput(BaseModel):
+    target_scene_id: str = Field(min_length=1, max_length=64)
+    title: str = Field(min_length=1, max_length=120)
+    yaw: float = Field(default=0, ge=-6.28319, le=6.28319)
+    pitch: float = Field(default=0, ge=-1.5708, le=1.5708)
+
+
+class TourSceneInput(BaseModel):
+    id: str = Field(min_length=1, max_length=64)
+    media_id: str = Field(min_length=1, max_length=36)
+    title: str = Field(min_length=1, max_length=120)
+    description: str = Field(default="", max_length=1000)
+    hotspots: list[TourHotspotInput] = Field(default_factory=list, max_length=20)
+
+
+class TourPayload(BaseModel):
+    title: str = Field(default="360° virtual tour", min_length=1, max_length=160)
+    description: str = Field(default="", max_length=2000)
+    scenes: list[TourSceneInput] = Field(default_factory=list, max_length=30)
 
 
 class ProjectCreate(BaseModel):
@@ -282,6 +306,44 @@ def save_editor_settings(project_id: str, payload: EditorSettings, user: User = 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found.")
     project.edit_settings_json = payload.model_dump_json()
+    project.updated_at = now_utc()
+    db.commit()
+    return payload.model_dump()
+
+
+@app.get("/api/projects/{project_id}/tour")
+def get_project_tour(project_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    try:
+        return json.loads(project.tour_json or "{}")
+    except json.JSONDecodeError:
+        return {"title": project.name, "description": "", "scenes": []}
+
+
+@app.put("/api/projects/{project_id}/tour")
+def save_project_tour(project_id: str, payload: TourPayload, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    project = db.scalar(select(Project).where(Project.id == project_id, Project.owner_id == user.id))
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    scene_ids = [scene.id for scene in payload.scenes]
+    if len(scene_ids) != len(set(scene_ids)):
+        raise HTTPException(status_code=422, detail="Tour scene IDs must be unique.")
+    known_scenes = set(scene_ids)
+    for scene in payload.scenes:
+        if any(hotspot.target_scene_id not in known_scenes for hotspot in scene.hotspots):
+            raise HTTPException(status_code=422, detail="Every hotspot must link to a scene in this tour.")
+    media_ids = {scene.media_id for scene in payload.scenes}
+    if media_ids:
+        owned_assets = db.scalars(
+            select(MediaAsset).join(Project).where(
+                MediaAsset.id.in_(media_ids), Project.id == project_id, Project.owner_id == user.id
+            )
+        ).all()
+        if {asset.id for asset in owned_assets} != media_ids:
+            raise HTTPException(status_code=422, detail="A tour scene references media that is not in this project.")
+    project.tour_json = payload.model_dump_json()
     project.updated_at = now_utc()
     db.commit()
     return payload.model_dump()
