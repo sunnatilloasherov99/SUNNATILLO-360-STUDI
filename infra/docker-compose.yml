@@ -26,8 +26,8 @@ services:
       RATE_LIMIT_STORAGE_URI: ${RATE_LIMIT_STORAGE_URI:-redis://redis:6379/0}
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    ports:
-      - "${API_PORT:-8000}:8000"
+    expose:
+      - "8000"
     volumes:
       - studio_media:/data/media
     depends_on:
