@@ -16,8 +16,12 @@ services:
       ENVIRONMENT: ${ENVIRONMENT:-production}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:8080}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-studio}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-studio}
+      MEDIA_STORAGE_PATH: /data/media
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-100}
     ports:
       - "${API_PORT:-8000}:8000"
+    volumes:
+      - studio_media:/data/media
     depends_on:
       db:
         condition: service_healthy
@@ -42,3 +46,4 @@ networks:
     driver: bridge
 volumes:
   postgres_data:
+  studio_media:
