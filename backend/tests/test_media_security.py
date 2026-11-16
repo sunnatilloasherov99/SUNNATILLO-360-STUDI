@@ -124,3 +124,94 @@ def test_upload_limit_is_enforced_and_partial_file_removed(client: TestClient) -
 
     assert response.status_code == 413
     assert list(main.storage_dir.iterdir()) == []
+
+
+def upload_png(client: TestClient, token: str, project_id: str) -> str:
+    response = client.post(
+        f"/api/projects/{project_id}/media",
+        headers={"Authorization": f"Bearer {token}"},
+        files={"file": ("tour-scene.png", png_bytes(), "image/png")},
+    )
+    assert response.status_code == 201, response.text
+    return response.json()["id"]
+
+
+def test_tour_rejects_hotspots_that_point_to_unknown_scenes(client: TestClient) -> None:
+    token = register(client, "tour-validation@example.com")
+    project_id = create_project(client, token)
+    media_id = upload_png(client, token, project_id)
+
+    response = client.put(
+        f"/api/projects/{project_id}/tour",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "Test tour",
+            "scenes": [
+                {
+                    "id": "lobby",
+                    "media_id": media_id,
+                    "title": "Lobby",
+                    "hotspots": [
+                        {
+                            "target_scene_id": "missing-room",
+                            "title": "Go to missing room",
+                        }
+                    ],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 422
+    assert "hotspot" in response.json()["detail"].lower()
+
+
+def test_public_tour_link_can_be_revoked(client: TestClient) -> None:
+    token = register(client, "tour-sharing@example.com")
+    project_id = create_project(client, token)
+    media_id = upload_png(client, token, project_id)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    saved_tour = client.put(
+        f"/api/projects/{project_id}/tour",
+        headers=headers,
+        json={
+            "title": "Public test tour",
+            "description": "A test virtual tour",
+            "scenes": [
+                {
+                    "id": "entrance",
+                    "media_id": media_id,
+                    "title": "Entrance",
+                    "description": "Main entrance",
+                    "hotspots": [],
+                }
+            ],
+        },
+    )
+    assert saved_tour.status_code == 200, saved_tour.text
+
+    enabled = client.put(
+        f"/api/projects/{project_id}/share",
+        headers=headers,
+        json={"enabled": True},
+    )
+    assert enabled.status_code == 200
+    share_url = enabled.json()["share_url"]
+    share_token = share_url.rsplit("/", 1)[-1]
+
+    public_tour = client.get(f"/api/public/tours/{share_token}")
+    assert public_tour.status_code == 200
+    assert len(public_tour.json()["scenes"]) == 1
+
+    revoked = client.put(
+        f"/api/projects/{project_id}/share",
+        headers=headers,
+        json={"enabled": False},
+    )
+    assert revoked.status_code == 200
+    assert revoked.json()["enabled"] is False
+    assert client.get(f"/api/public/tours/{share_token}").status_code == 404
+    assert client.get(
+        f"/api/public/media/{share_token}/{media_id}"
+    ).status_code == 404
