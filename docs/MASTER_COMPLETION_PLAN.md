@@ -39,7 +39,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 ### 5.2 Qo'lda tuzatish
 - [x] Brauzerda nuqson maydonini belgilash va yumshoq chetli clone brush qo‘shildi.
 - [x] Clone/patch vositasi va manba maydonini tanlash, cho‘tka o‘lchami hamda stroke bo‘ylab manba siljishi qo‘shildi.
-- [ ] Chap-o'ng chegaradan o'tuvchi 360° maskani to'g'ri o'rash.
+- [x] Clone cho‘tkasining nishon nuqtasi uchun chap-o‘ng 360° o‘rash qo‘shildi; manba namunasining chetni kesib o‘tishi hali qo‘llanmaydi.
 - [x] Editor preview, undo/redo va tuzatish qatlamini tozalash qo‘shildi.
 - [x] Tuzatish qatlamini asl faylga tegmasdan yangi hosila media eksportiga qo‘shildi.
 
