@@ -150,3 +150,20 @@
 .panorama-repair-panel p,.panorama-repair-panel small{margin:0;font-size:11px;line-height:1.6;color:#91a5c3}
 .panorama-repair-panel button:disabled{opacity:.35;cursor:not-allowed}
 @media(max-width:600px){.panorama-repair-panel{padding:12px}.panorama-brush-control{grid-template-columns:1fr 2fr 42px}.panorama-repair-actions button{flex:1}}
+
+
+.inpainting-panel{display:grid;gap:12px;margin:18px 0;padding:18px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:16px;background:rgba(255,255,255,.025)}
+.inpainting-panel h3,.inpainting-result h4{margin:0}
+.inpainting-panel>p,.inpainting-panel>small{margin:0;color:var(--muted,#9aa8bd);font-size:12px;line-height:1.6}
+.inpainting-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.inpainting-controls label{display:flex;align-items:center;gap:9px;font-size:12px}
+.inpainting-controls input{width:140px;accent-color:var(--accent,#8b9cff)}
+.inpainting-canvas-wrap{position:relative;width:100%;max-height:560px;overflow:hidden;border-radius:10px;background:#080d16}
+.inpainting-canvas-wrap img{display:block;width:100%;height:100%;object-fit:contain}
+.inpainting-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.inpainting-preview{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inpainting-preview>div{display:grid;gap:8px;min-width:0}
+.inpainting-preview strong{font-size:11px}
+.inpainting-preview img{display:block;width:100%;max-height:300px;object-fit:contain;background:#080d16;border-radius:8px}
+.inpainting-result{display:grid;gap:12px}
+@media(max-width:620px){.inpainting-panel{padding:13px}.inpainting-preview{grid-template-columns:1fr}.inpainting-controls>*{max-width:100%}}
