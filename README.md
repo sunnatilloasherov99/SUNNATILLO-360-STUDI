@@ -20,6 +20,9 @@ An independent, portable web platform for professional 360° media workflows and
 - First 360° media workspace: import a JPG/PNG/WebP panorama, inspect dimensions and aspect ratio, and interactively look around a 2:1 equirectangular panorama.
 - Original imported panorama is not modified.
 - FastAPI health and capability endpoints.
+- Server-side project create/list/delete API backed by SQLAlchemy and PostgreSQL (SQLite is available for local development).
+- Persistent JPEG/PNG/WebP media upload, listing and file delivery endpoints with a configurable upload limit.
+- Docker Compose stores uploaded media in a dedicated persistent volume, separate from the database volume.
 - Docker Compose baseline with PostgreSQL.
 - GitHub Actions frontend build and backend syntax checks.
 
