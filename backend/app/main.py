@@ -812,7 +812,8 @@ async def ai_assist(payload: AIRequest, user: User = Depends(current_user), db: 
                     system = (
                         f"{AI_ROLE_PROMPTS[role_name]} "
                         f"Respond in {language_names[payload.language]}. "
-                        "Be honest about uncertainty and never invent visual observations."
+                        "Be honest about uncertainty and never invent visual observations. "
+                        "For video analysis, you see only three sampled keyframes, not continuous footage; do not infer motion, audio, or events between frames."
                     )
                     async with ai_semaphore:
                         response = await client.post(
@@ -837,7 +838,8 @@ async def ai_assist(payload: AIRequest, user: User = Depends(current_user), db: 
                 system_prompt = (
                     f"{AI_ROLE_PROMPTS[payload.role]} "
                     f"Respond in {language_names[payload.language]}. "
-                    "Be honest about uncertainty. Do not fabricate visual observations or platform publishing permissions."
+                    "Be honest about uncertainty. Do not fabricate visual observations or platform publishing permissions. "
+                    "For video analysis, you see only three sampled keyframes, not continuous footage; do not infer motion, audio, or events between frames."
                 )
                 async with ai_semaphore:
                     response = await client.post(
