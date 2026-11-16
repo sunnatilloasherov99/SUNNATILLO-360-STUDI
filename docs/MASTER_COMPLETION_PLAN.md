@@ -41,7 +41,8 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 - [x] Clone/patch vositasi va manba maydonini tanlash, cho‘tka o‘lchami hamda stroke bo‘ylab manba siljishi qo‘shildi.
 - [x] Clone cho‘tkasining nishon nuqtasi uchun chap-o‘ng 360° o‘rash qo‘shildi; manba namunasining chetni kesib o‘tishi hali qo‘llanmaydi.
 - [x] Editor preview, undo/redo va tuzatish qatlamini tozalash qo‘shildi.
-- [x] Tuzatish qatlamini asl faylga tegmasdan yangi hosila media eksportiga qo‘shildi.\n- [x] CI run 43918087957: frontend build, backend testlari va Docker/infratuzilma tekshiruvlari muvaffaqiyatli.
+- [x] Tuzatish qatlamini asl faylga tegmasdan yangi hosila media eksportiga qo‘shildi.
+- [x] CI run 43918087957: frontend build, backend testlari va Docker/infratuzilma tekshiruvlari muvaffaqiyatli.
 
 ### 5.3 Ixtiyoriy lokal AI inpainting
 - [ ] Provider-neutral adapter.
