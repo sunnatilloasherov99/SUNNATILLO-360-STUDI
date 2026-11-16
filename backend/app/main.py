@@ -12,6 +12,7 @@ import tempfile
 from io import BytesIO
 from zipfile import ZIP_DEFLATED, ZipFile
 from PIL import Image, UnidentifiedImageError
+from app.panorama_diagnostics import find_vertical_discontinuities
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Generator, Literal
@@ -940,6 +941,27 @@ def check_project_quality(project_id: str, user: User = Depends(current_user), d
                 "params": {"name": asset.original_name, "score": round(seam_score, 1), "level": seam_level},
                 "message": f"{asset.original_name}: estimated edge colour difference {seam_score:.1f}/255 ({seam_level})",
             })
+            with Image.open(path) as image:
+                discontinuities = find_vertical_discontinuities(image)
+            if discontinuities.get("available"):
+                strongest = discontinuities["strongest_score"]
+                candidate_level = "high" if strongest >= 45 else "moderate" if strongest >= 25 else "low"
+                checks.append({
+                    "id": f"media-{asset.id}-vertical-candidates",
+                    "code": "vertical_discontinuity_candidates",
+                    "status": "warning" if strongest >= 45 else "pass",
+                    "params": {
+                        "name": asset.original_name,
+                        "level": candidate_level,
+                        "confidence": "low",
+                        "interpretation": discontinuities["interpretation"],
+                        "candidates": discontinuities["candidates"],
+                    },
+                    "message": (
+                        f"{asset.original_name}: strongest vertical contrast candidate "
+                        f"{strongest:.1f}/255 ({candidate_level}); candidates are not confirmed defects."
+                    ),
+                })
     if not assets:
         checks.append({"id": "media-present", "code": "no_media", "status": "warning", "params": {}, "message": "No panorama images have been uploaded yet."})
     try:
