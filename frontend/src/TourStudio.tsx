@@ -161,6 +161,7 @@ export default function TourStudio({ token, language, projectId, projectName, on
  }
  function removeScene(id:string){
   setTour(current=>({...current,scenes:current.scenes.filter(scene=>scene.id!==id).map(scene=>({...scene,hotspots:scene.hotspots.filter(hotspot=>hotspot.target_scene_id!==id)}))}));
+  if(targetSceneId===id)setTargetSceneId("");
   if(activeSceneId===id)setActiveSceneId(tour.scenes.find(scene=>scene.id!==id)?.id||"");
  }
  function addHotspot(){
