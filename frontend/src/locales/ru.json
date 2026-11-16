@@ -37,5 +37,7 @@
   "activeProject": "АКТИВНЫЙ ПРОЕКТ",
   "yourWork": "ВАШИ ПРОЕКТЫ",
   "portableTag": "НЕЗАВИСИМО · ПЕРЕНОСИМО · БЕЗОПАСНО",
-  "immersiveTag": "ПОГРУЖЕНИЕ 360°"
+  "immersiveTag": "ПОГРУЖЕНИЕ 360°",
+  "newWorkspace": "НОВОЕ РАБОЧЕЕ ПРОСТРАНСТВО",
+  "webEdition": "ВЕБ-ВЕРСИЯ"
 }
