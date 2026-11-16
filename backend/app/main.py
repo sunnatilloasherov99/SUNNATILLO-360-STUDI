@@ -360,7 +360,8 @@ def save_project_tour(project_id: str, payload: TourPayload, user: User = Depend
     if media_ids:
         owned_assets = db.scalars(
             select(MediaAsset).join(Project).where(
-                MediaAsset.id.in_(media_ids), Project.id == project_id, Project.owner_id == user.id
+                MediaAsset.id.in_(media_ids), Project.id == project_id, Project.owner_id == user.id,
+                MediaAsset.content_type.like("image/%")
             )
         ).all()
         if {asset.id for asset in owned_assets} != media_ids:
@@ -433,6 +434,9 @@ def check_project_quality(project_id: str, user: User = Depends(current_user), d
     checks = []
     valid_media_ids = set()
     for asset in assets:
+        if asset.content_type.startswith("video/"):
+            checks.append({"id": f"media-{asset.id}-video", "status": "warning", "message": f"{asset.original_name}: video quality analysis is not available yet."})
+            continue
         path = storage_dir / asset.stored_name
         if not path.is_file():
             checks.append({"id": f"media-{asset.id}-file", "status": "fail", "message": f"Missing original file: {asset.original_name}"})
@@ -563,6 +567,8 @@ async def upload_project_media(
         "image/jpeg": ".jpg",
         "image/png": ".png",
         "image/webp": ".webp",
+        "video/mp4": ".mp4",
+        "video/webm": ".webm",
     }
     extension = allowed_types.get(file.content_type or "")
     if not extension:
@@ -596,6 +602,8 @@ async def upload_project_media(
         "image/jpeg": lambda data: data.startswith(bytes([255, 216, 255])),
         "image/png": lambda data: data.startswith(bytes([137, 80, 78, 71, 13, 10, 26, 10])),
         "image/webp": lambda data: len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP",
+        "video/mp4": lambda data: len(data) >= 8 and data[4:8] == b"ftyp",
+        "video/webm": lambda data: data.startswith(bytes([0x1A, 0x45, 0xDF, 0xA3])),
     }
     if not signatures[file.content_type or ""](bytes(header)):
         destination.unlink(missing_ok=True)
