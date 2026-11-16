@@ -41,7 +41,7 @@ An independent, portable web platform for professional 360° media workflows and
 
 ### Not implemented yet
 - Production hardening still required before public launch: email verification/password reset, HTTPS, production secrets and additional abuse monitoring.
-- Full timeline editor, video processing, color grading, audio and keyframes.
+- Full multi-track timeline editor, advanced color grading, audio editing and keyframes; current MP4 export is a basic trim-and-re-encode workflow.
 - Cloud AI provider adapters, multimodal image/video analysis and consent-based project-file context.
 - Advanced seam/stitching defect detection and automatic stitching repair.
 - Standalone offline tour package export and official Google/Yandex/2GIS publishing integrations.
