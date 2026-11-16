@@ -28,7 +28,7 @@ restart_api() { docker compose start api >/dev/null 2>&1 || true; }
 trap restart_api EXIT
 
 echo "Restoring PostgreSQL database..."
-docker compose exec -T db sh -c 'pg_restore --clean --if-exists --no-owner -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < "$DB_FILE"
+docker compose exec -T db sh -c 'pg_restore --clean --if-exists --no-owner --no-acl -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < "$DB_FILE"
 
 docker compose start api
 trap - EXIT
