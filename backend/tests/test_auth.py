@@ -126,7 +126,7 @@ def test_tour_is_private_and_references_owned_media(client: TestClient) -> None:
     uploaded = client.post(
         f"/api/projects/{project_id}/media",
         headers=bearer(owner_token),
-        files={"file": ("entry.png", b"\\x89PNG\\r\\n\\x1a\\nmock-image", "image/png")},
+        files={"file": ("entry.png", b"\x89PNG\r\n\x1a\nmock-image", "image/png")},
     )
     assert uploaded.status_code == 201
     media_id = uploaded.json()["id"]
