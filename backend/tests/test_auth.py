@@ -139,7 +139,7 @@ def test_tour_is_private_and_references_owned_media(client: TestClient) -> None:
     video_upload = client.post(
         f"/api/projects/{project_id}/media",
         headers=bearer(owner_token),
-        files={"file": ("walkthrough.mp4", b"\\x00\\x00\\x00\\x18ftypisom\\x00\\x00\\x02\\x00isomiso2", "video/mp4")},
+        files={"file": ("walkthrough.mp4", b"\x00\x00\x00\x18ftypisom\x00\x00\x02\x00isomiso2", "video/mp4")},
     )
     assert video_upload.status_code == 201
     assert video_upload.json()["contentType"] == "video/mp4"
