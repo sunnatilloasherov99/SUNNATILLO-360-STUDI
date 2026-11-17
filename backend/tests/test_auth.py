@@ -522,3 +522,76 @@ def test_media_upload_rejects_mismatched_image_signature(client: TestClient) -> 
     listed = client.get(f"/api/projects/{project_id}/media", headers=bearer(token))
     assert listed.status_code == 200
     assert listed.json() == []
+
+
+
+def test_inpainting_rejects_mask_with_different_dimensions_before_provider_call(client: TestClient, monkeypatch) -> None:
+    import httpx
+    import app.main as main_module
+
+    client.headers.update({"X-Real-IP": "198.51.100.121"})
+    token = register(client, "inpaint-mask-size@example.com")
+    source_buffer = BytesIO()
+    Image.new("RGB", (20, 10), (120, 130, 140)).save(source_buffer, format="PNG")
+    mask_buffer = BytesIO()
+    Image.new("L", (19, 10), 0).save(mask_buffer, format="PNG")
+
+    requests = []
+    transport = httpx.MockTransport(lambda request: requests.append(request) or httpx.Response(500))
+    real_async_client = httpx.AsyncClient
+    monkeypatch.setattr(main_module.settings, "inpainting_endpoint_url", "http://local-provider.test/inpaint")
+    monkeypatch.setattr(
+        main_module.httpx,
+        "AsyncClient",
+        lambda **kwargs: real_async_client(transport=transport, **kwargs),
+    )
+
+    response = client.post(
+        "/api/ai/inpaint",
+        headers=bearer(token),
+        files={
+            "image": ("source.png", source_buffer.getvalue(), "image/png"),
+            "mask": ("mask.png", mask_buffer.getvalue(), "image/png"),
+        },
+    )
+
+    assert response.status_code == 422
+    assert "dimensions" in response.json()["detail"]
+    assert requests == []
+
+
+def test_inpainting_rejects_provider_image_with_wrong_dimensions(client: TestClient, monkeypatch) -> None:
+    import httpx
+    import app.main as main_module
+
+    client.headers.update({"X-Real-IP": "198.51.100.122"})
+    token = register(client, "inpaint-output-size@example.com")
+    source_buffer = BytesIO()
+    Image.new("RGB", (20, 10), (120, 130, 140)).save(source_buffer, format="PNG")
+    mask_buffer = BytesIO()
+    Image.new("L", (20, 10), 0).save(mask_buffer, format="PNG")
+    wrong_output = BytesIO()
+    Image.new("RGB", (10, 5), (10, 20, 30)).save(wrong_output, format="PNG")
+
+    transport = httpx.MockTransport(
+        lambda request: httpx.Response(200, content=wrong_output.getvalue(), headers={"Content-Type": "image/png"})
+    )
+    real_async_client = httpx.AsyncClient
+    monkeypatch.setattr(main_module.settings, "inpainting_endpoint_url", "http://local-provider.test/inpaint")
+    monkeypatch.setattr(
+        main_module.httpx,
+        "AsyncClient",
+        lambda **kwargs: real_async_client(transport=transport, **kwargs),
+    )
+
+    response = client.post(
+        "/api/ai/inpaint",
+        headers=bearer(token),
+        files={
+            "image": ("source.png", source_buffer.getvalue(), "image/png"),
+            "mask": ("mask.png", mask_buffer.getvalue(), "image/png"),
+        },
+    )
+
+    assert response.status_code == 502
+    assert "dimensions" in response.json()["detail"]
