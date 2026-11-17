@@ -20,7 +20,7 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 ## Umumiy holat
 
 - 1–3-bosqichlar: muhim funksional poydevor mavjud; production darajasida to'liq tasdiqlangan deb hisoblanmaydi.
-- 4-bosqich: GitHub Actions frontend, backend va infratuzilma tekshiruvlari 2026-11-16 dagi 43916242412 run'da muvaffaqiyatli o'tdi; real qurilmalar va serverda qo'lda sinov hali kerak.
+- 4-bosqich: GitHub Actions frontend, backend va infratuzilma tekshiruvlari 2026-11-17 holatiga eng so'nggi 43980197992 run'da ham muvaffaqiyatli o'tdi (3/3 job: frontend, backend, infrastructure); real qurilmalar va serverda qo'lda sinov hali kerak.
 - 5-bosqich: faol ish.
 - 6–9-bosqichlar: bajarilishi kerak.
 
@@ -126,6 +126,15 @@ O'zbek (asosiy), rus va ingliz tillarida ishlaydigan, o'z serveriga ko'chirish m
 5. 5.3 uchun ComfyUI HTTP bridge va haqiqiy lokal model bilan integratsion sinov.
 6. 5.4 uchun checklist asosida browser darajasida eksport qatlamalari va AI rollback vizual sinovi.
 7. Haqiqiy telefon panoramasi bilan yakuniy qabul sinovi.
+
+## 2026-11-17 holat yangilanishi
+
+- [x] Eng so'nggi `main` commit `56315ec53dd6504f1410ff7a739530fc7a355491` uchun GitHub Actions run `43980197992` muvaffaqiyatli yakunlandi.
+- [x] Ushbu run'da `frontend`, `backend`, `infrastructure` job'larining barchasi `success` (3/3).
+- [x] Undan oldingi AI maska brush commit `5227dc58ea48d73085cb79e2ce005e019d8868f3` uchun run `43980175823` ham muvaffaqiyatli.
+- [ ] CI muvaffaqiyati browserdagi haqiqiy chizish, eksport va panorama sifati sinovini almashtirmaydi; 5-bosqich yopilmagan.
+- [ ] Navbatdagi amaliy qadam: `PANORAMA_BROWSER_ACCEPTANCE.md` bo'yicha Chrome/Edge'da real panorama bilan B va D bo'limlarini tekshirish; so'ng telefon panoramasi va ixtiyoriy lokal AI bridge sinovi.
+
 
 ## Reliz hisoboti
 
